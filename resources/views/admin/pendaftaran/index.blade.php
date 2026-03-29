@@ -1,0 +1,122 @@
+@extends('layouts.app')
+
+@section('title', 'Semua Pendaftaran')
+
+@section('content')
+<div class="row">
+    <div class="col-12">
+        <ul class="nav nav-tabs mb-4" id="pendaftaranTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="skripsi-tab" data-bs-toggle="tab" 
+                        data-bs-target="#skripsi" type="button" role="tab">
+                    <i class="bi bi-file-text"></i> Sidang Skripsi
+                    <span class="badge bg-primary">{{ $skripsi->count() }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="metodologi-tab" data-bs-toggle="tab" 
+                        data-bs-target="#metodologi" type="button" role="tab">
+                    <i class="bi bi-book"></i> Ujian Metodologi
+                    <span class="badge bg-primary">{{ $metodologi->count() }}</span>
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="skripsi" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>NPM</th>
+                                        <th>Nama</th>
+                                        <th>Judul Skripsi</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($skripsi as $item)
+                                    <tr>
+                                        <td>{{ $item->created_at->format('d/m/Y') }}</td>
+                                        <td>{{ $item->mahasiswa->npm }}</td>
+                                        <td>{{ $item->mahasiswa->user->name }}</td>
+                                        <td>{{ Str::limit($item->judul_skripsi, 50) }}</td>
+                                        <td>
+                                            <span class="status-badge status-{{ $item->status }}">
+                                                {{ ucfirst($item->status) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('admin.pendaftaran.skripsi.show', $item->id) }}" 
+                                               class="btn btn-sm btn-info">
+                                                <i class="bi bi-eye"></i> Detail
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center">Belum ada pendaftaran sidang skripsi</td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-pane fade" id="metodologi" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>NPM</th>
+                                        <th>Nama</th>
+                                        <th>Judul Penelitian</th>
+                                        <th>Pembimbing</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($metodologi as $item)
+                                    <tr>
+                                        <td>{{ $item->created_at->format('d/m/Y') }}</td>
+                                        <td>{{ $item->mahasiswa->npm }}</td>
+                                        <td>{{ $item->mahasiswa->user->name }}</td>
+                                        <td>{{ Str::limit($item->judul_penelitian, 50) }}</td>
+                                        <td>{{ $item->dosen_pembimbing }}</td>
+                                        <td>
+                                            <span class="status-badge status-{{ $item->status }}">
+                                                {{ ucfirst($item->status) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('admin.pendaftaran.metodologi.show', $item->id) }}" 
+                                               class="btn btn-sm btn-info">
+                                                <i class="bi bi-eye"></i> Detail
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center">Belum ada pendaftaran ujian metodologi</td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
