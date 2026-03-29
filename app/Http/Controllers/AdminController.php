@@ -67,9 +67,19 @@ class AdminController extends Controller
         ));
     }
 
-    public function manageUsers()
+    public function manageUsers(Request $request)
     {
-        $users = User::with('role', 'mahasiswa')->paginate(10);
+        $perPage = $request->get('per_page', 10);
+        
+        $users = User::with('role', 'mahasiswa')
+            ->leftJoin('mahasiswas', 'users.id', '=', 'mahasiswas.user_id')
+            ->select('users.*', 'mahasiswas.npm')
+            ->orderByRaw('CASE 
+                WHEN mahasiswas.npm IS NULL THEN 1 
+                ELSE 0 
+            END, mahasiswas.npm ASC')
+            ->paginate($perPage);
+        
         return view('admin.users.index', compact('users'));
     }
 
