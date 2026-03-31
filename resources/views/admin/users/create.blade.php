@@ -172,7 +172,7 @@
                                 @enderror
                             </div>
                             
-                            <div class="col-md-6 mb-3">
+                            {{-- <div class="col-md-6 mb-3">
                                 <label class="form-label required-field">Tanggal Lahir</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-white border-end-0">
@@ -184,7 +184,7 @@
                                 @error('tanggal_lahir')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
-                            </div>
+                            </div> --}}
                             
                             <div class="col-md-6 mb-3">
                                 <label class="form-label required-field">No Handphone</label>

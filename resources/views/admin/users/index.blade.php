@@ -223,9 +223,9 @@
                         <td class="no-column">{{ $nomor }}</td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
-                                <div class="user-avatar-mini">
+                                {{-- <div class="user-avatar-mini">
                                     <i class="bi bi-person-circle"></i>
-                                </div>
+                                </div> --}}
                                 <strong>{{ $user->name }}</strong>
                             </div>
                         </td>
