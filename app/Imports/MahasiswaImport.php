@@ -26,10 +26,21 @@ class MahasiswaImport implements ToCollection, WithHeadingRow
     protected $jenisPerwalian; // 'skripsi' atau 'metodologi'
     protected $academicPeriodId;
 
+    public function chunkSize(): int
+    {
+        return 100;
+    }
+
     public function __construct($jenisPerwalian, $academicPeriodId)
     {
         $this->jenisPerwalian = $jenisPerwalian;
         $this->academicPeriodId = $academicPeriodId;
+
+        // Debug: log nilai yang diterima
+        \Log::info('MahasiswaImport constructed', [
+            'jenis_perwalian' => $this->jenisPerwalian,
+            'academic_period_id' => $this->academicPeriodId
+        ]);
     }
 
     public function collection(Collection $rows)
@@ -76,22 +87,38 @@ class MahasiswaImport implements ToCollection, WithHeadingRow
                     $this->updateMahasiswa($existingMahasiswa, $nama, $tempatLahir, $tanggalLahir, $ipk, $dosenWali);
                     $this->updatedCount++;
                     $mahasiswaId = $existingMahasiswa->id;
+
+                    // CEK APAKAH SUDAH TERDAFTAR DI PERIODE INI
+                    $sudahTerdaftar = false;
+                    if ($this->jenisPerwalian == 'skripsi') {
+                        $sudahTerdaftar = PendaftaranSkripsi::where('mahasiswa_id', $mahasiswaId)
+                            ->where('academic_period_id', $this->academicPeriodId)
+                            ->exists();
+                    } else {
+                        $sudahTerdaftar = PendaftaranMetodologi::where('mahasiswa_id', $mahasiswaId)
+                            ->where('academic_period_id', $this->academicPeriodId)
+                            ->exists();
+                    }
+
+                    // Jika belum terdaftar di periode ini, buat pendaftaran baru
+                    if (!$sudahTerdaftar) {
+                        $this->createPendaftaran($mahasiswaId);
+                        $this->registeredCount++;
+                    }
                 } else {
                     // Buat user dan mahasiswa baru
                     $user = $this->createUser($nama, $npm);
                     $mahasiswa = $this->createMahasiswa($user->id, $npm, $tempatLahir, $tanggalLahir, $ipk, $dosenWali);
                     $mahasiswaId = $mahasiswa->id;
                     $this->importedCount++;
+
+                    // Buat pendaftaran untuk mahasiswa baru
+                    $this->createPendaftaran($mahasiswaId);
+                    $this->registeredCount++;
                 }
-
-                // Buat pendaftaran berdasarkan jenis perwalian
-                $this->createPendaftaran($mahasiswaId);
-
-                $this->registeredCount++;
             }
 
             DB::commit();
-
         } catch (\Exception $e) {
             DB::rollBack();
             $this->errors[] = 'Error: ' . $e->getMessage();
@@ -151,30 +178,41 @@ class MahasiswaImport implements ToCollection, WithHeadingRow
 
     private function createPendaftaran($mahasiswaId)
     {
-        $academicPeriod = AcademicPeriod::find($this->academicPeriodId);
-        if (!$academicPeriod) {
-            $this->errors[] = "Baris {$this->rowNumber}: Periode akademik tidak valid.";
+        // Debug: log sebelum insert
+        \Log::info('=== CREATE PENDAFTARAN DIPANGGIL ===');
+        \Log::info('mahasiswa_id: ' . $mahasiswaId);
+        \Log::info('academicPeriodId: ' . $this->academicPeriodId);
+        \Log::info('jenisPerwalian: ' . $this->jenisPerwalian);
+
+        if (!$this->academicPeriodId) {
+            $this->errors[] = "Baris {$this->rowNumber}: Periode akademik tidak valid (ID: {$this->academicPeriodId})";
             return;
         }
 
         if ($this->jenisPerwalian == 'skripsi') {
-            PendaftaranSkripsi::create([
+            $data = [
                 'mahasiswa_id' => $mahasiswaId,
-                'academic_period_id' => $academicPeriod->id,
+                'academic_period_id' => $this->academicPeriodId,
                 'judul_skripsi' => 'Belum diisi',
                 'dosen_pembimbing' => 'Belum ditentukan',
                 'status' => 'pending',
-            ]);
+            ];
+
+            \Log::info('Insert skripsi data:', $data);
+            PendaftaranSkripsi::create($data);
         } elseif ($this->jenisPerwalian == 'metodologi') {
-            PendaftaranMetodologi::create([
+            $data = [
                 'mahasiswa_id' => $mahasiswaId,
-                'academic_period_id' => $academicPeriod->id,
+                'academic_period_id' => $this->academicPeriodId,
                 'email' => User::find($mahasiswaId)->email ?? '',
                 'judul_penelitian' => 'Belum diisi',
                 'dosen_pembimbing' => 'Belum ditentukan',
                 'kuliah_peminatan' => 'Belum dipilih',
                 'status' => 'pending',
-            ]);
+            ];
+
+            \Log::info('Insert metodologi data:', $data);
+            PendaftaranMetodologi::create($data);
         }
     }
 
@@ -240,5 +278,15 @@ class MahasiswaImport implements ToCollection, WithHeadingRow
     public function getErrors()
     {
         return $this->errors;
+    }
+
+    public function getJenisPerwalian()
+    {
+        return $this->jenisPerwalian;
+    }
+
+    public function getAcademicPeriodId()
+    {
+        return $this->academicPeriodId;
     }
 }

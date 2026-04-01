@@ -4,7 +4,6 @@
 
 @section('content')
 <style>
-    /* tambahan style spesifik jika diperlukan */
     .stat-card {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 20px;
@@ -15,19 +14,23 @@
         position: relative;
         overflow: hidden;
     }
+
     .stat-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
     }
+
     .stat-number {
         font-size: 36px;
         font-weight: bold;
         margin-bottom: 5px;
     }
+
     .stat-label {
         font-size: 14px;
         opacity: 0.9;
     }
+
     .stat-icon {
         font-size: 48px;
         opacity: 0.2;
@@ -35,6 +38,7 @@
         right: 20px;
         bottom: 20px;
     }
+
     .period-badge {
         background: #e9ecef;
         color: #4a5568;
@@ -45,6 +49,7 @@
         display: inline-block;
         margin: 3px;
     }
+
     .status-badge {
         display: inline-block;
         padding: 5px 12px;
@@ -54,21 +59,49 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
-    .status-pending { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
-    .status-review { background: #d1ecf1; color: #0c5460; border: 1px solid #17a2b8; }
-    .status-approved { background: #d4edda; color: #155724; border: 1px solid #28a745; }
-    .status-rejected { background: #f8d7da; color: #721c24; border: 1px solid #dc3545; }
-    .status-revision { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffc107;
+    }
+
+    .status-review {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #17a2b8;
+    }
+
+    .status-approved {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #28a745;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #dc3545;
+    }
+
+    .status-revision {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffc107;
+    }
+
     .empty-state {
         text-align: center;
         padding: 40px 20px;
         color: #a0aec0;
     }
+
     .empty-state i {
         font-size: 48px;
         margin-bottom: 15px;
         opacity: 0.5;
     }
+
     .table-custom thead th {
         background: #f8f9fc;
         border-bottom: 2px solid #e3e6f0;
@@ -79,6 +112,7 @@
         letter-spacing: 0.5px;
         padding: 12px;
     }
+
     .table-custom tbody td {
         padding: 12px;
         vertical-align: middle;
@@ -126,16 +160,16 @@
                 </div>
                 <div class="card-body">
                     @if(isset($skripsiPeriods) && $skripsiPeriods->count())
-                        <div>
-                            @foreach($skripsiPeriods as $period)
-                                <span class="period-badge">{{ $period }}</span>
-                            @endforeach
-                        </div>
+                    <div>
+                        @foreach($skripsiPeriods as $period)
+                        <span class="period-badge">{{ $period }}</span>
+                        @endforeach
+                    </div>
                     @else
-                        <div class="empty-state">
-                            <i class="bi bi-inbox"></i>
-                            <p class="mb-0">Belum ada pendaftaran skripsi</p>
-                        </div>
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p class="mb-0">Belum ada pendaftaran skripsi</p>
+                    </div>
                     @endif
                 </div>
             </div>
@@ -147,16 +181,16 @@
                 </div>
                 <div class="card-body">
                     @if(isset($metodologiPeriods) && $metodologiPeriods->count())
-                        <div>
-                            @foreach($metodologiPeriods as $period)
-                                <span class="period-badge">{{ $period }}</span>
-                            @endforeach
-                        </div>
+                    <div>
+                        @foreach($metodologiPeriods as $period)
+                        <span class="period-badge">{{ $period }}</span>
+                        @endforeach
+                    </div>
                     @else
-                        <div class="empty-state">
-                            <i class="bi bi-inbox"></i>
-                            <p class="mb-0">Belum ada pendaftaran metodologi</p>
-                        </div>
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p class="mb-0">Belum ada pendaftaran metodologi</p>
+                    </div>
                     @endif
                 </div>
             </div>
@@ -175,41 +209,40 @@
                 </div>
                 <div class="card-body p-0">
                     @if($pendaftaranSkripsi->isEmpty())
-                        <div class="empty-state p-4">
-                            <i class="bi bi-inbox"></i>
-                            <p class="mb-0">Belum ada pendaftaran skripsi</p>
-                        </div>
+                    <div class="empty-state p-4">
+                        <i class="bi bi-inbox"></i>
+                        <p class="mb-0">Belum ada pendaftaran skripsi</p>
+                    </div>
                     @else
-                        <div class="table-responsive">
-                            <table class="table table-custom table-hover mb-0">
-                                <thead>
-                                    32
-                                        <th>Tanggal</th>
-                                        <th>Judul</th>
-                                        <th>Status</th>
-                                        <th class="text-center">Aksi</th>
-                                    </thead>
-                                <tbody>
-                                    @foreach($pendaftaranSkripsi as $item)
-                                    <tr>
-                                        <td class="align-middle">{{ $item->created_at->format('d/m/Y') }}</td>
-                                        <td class="align-middle">{{ Str::limit($item->judul_skripsi, 50) }}</td>
-                                        <td class="align-middle">
-                                            <span class="status-badge status-{{ $item->status }}">
-                                                {{ ucfirst($item->status) }}
-                                            </span>
-                                        </td>
-                                        <td class="align-middle text-center">
-                                            <a href="{{ route('mahasiswa.show-skripsi', $item->id) }}" 
-                                               class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-custom table-hover mb-0">
+                            <thead>
+                                <th>Tanggal</th>
+                                <th>Judul</th>
+                                <th>Status</th>
+                                <th class="text-center">Aksi</th>
+                            </thead>
+                            <tbody>
+                                @foreach($pendaftaranSkripsi as $item)
+                                <tr>
+                                    <td class="align-middle">{{ $item->created_at->format('d/m/Y') }}</td>
+                                    <td class="align-middle">{{ Str::limit($item->judul_skripsi, 50) }}</td>
+                                    <td class="align-middle">
+                                        <span class="status-badge status-{{ $item->status }}">
+                                            {{ ucfirst($item->status) }}
+                                        </span>
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <a href="{{ route('mahasiswa.show-skripsi', $item->id) }}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                     @endif
                 </div>
             </div>
@@ -224,42 +257,42 @@
                 </div>
                 <div class="card-body p-0">
                     @if($pendaftaranMetodologi->isEmpty())
-                        <div class="empty-state p-4">
-                            <i class="bi bi-inbox"></i>
-                            <p class="mb-0">Belum ada pendaftaran metodologi</p>
-                        </div>
+                    <div class="empty-state p-4">
+                        <i class="bi bi-inbox"></i>
+                        <p class="mb-0">Belum ada pendaftaran metodologi</p>
+                    </div>
                     @else
-                        <div class="table-responsive">
-                            <table class="table table-custom table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Tanggal</th>
-                                        <th>Judul</th>
-                                        <th>Status</th>
-                                        <th class="text-center">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($pendaftaranMetodologi as $item)
-                                    <tr>
-                                        <td class="align-middle">{{ $item->created_at->format('d/m/Y') }}</td>
-                                        <td class="align-middle">{{ Str::limit($item->judul_penelitian, 50) }}</td>
-                                        <td class="align-middle">
-                                            <span class="status-badge status-{{ $item->status }}">
-                                                {{ ucfirst($item->status) }}
-                                            </span>
-                                        </td>
-                                        <td class="align-middle text-center">
-                                            <a href="{{ route('mahasiswa.show-metodologi', $item->id) }}" 
-                                               class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-custom table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Judul</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($pendaftaranMetodologi as $item)
+                                <tr>
+                                    <td class="align-middle">{{ $item->created_at->format('d/m/Y') }}</td>
+                                    <td class="align-middle">{{ Str::limit($item->judul_penelitian, 50) }}</td>
+                                    <td class="align-middle">
+                                        <span class="status-badge status-{{ $item->status }}">
+                                            {{ ucfirst($item->status) }}
+                                        </span>
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <a href="{{ route('mahasiswa.show-metodologi', $item->id) }}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                     @endif
                 </div>
             </div>

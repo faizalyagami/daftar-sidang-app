@@ -14,17 +14,17 @@
             </div>
             <div class="card-body">
                 @if($errors->any())
-                    <div class="alert alert-danger">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <strong>Error:</strong>
-                        <ul class="mb-0 mt-2">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Error:</strong>
+                    <ul class="mb-0 mt-2">
+                        @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
                 @endif
-                
+
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle-fill me-2"></i>
                     <strong>Panduan Import Data:</strong>
@@ -38,7 +38,7 @@
                         <li>Password default untuk akun baru: <strong>password123</strong></li>
                     </ul>
                 </div>
-                
+
                 <div class="alert alert-warning">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                     <strong>Catatan Penting:</strong>
@@ -48,13 +48,13 @@
                         <li>NPM harus unik dan tidak boleh ada duplikat</li>
                     </ul>
                 </div>
-                
-                <form action="{{ route('admin.mahasiswa.import.process') }}" 
-                      method="POST" 
-                      enctype="multipart/form-data"
-                      id="importForm">
+
+                <form action="{{ route('admin.mahasiswa.import.process') }}"
+                    method="POST"
+                    enctype="multipart/form-data"
+                    id="importForm">
                     @csrf
-                    
+
                     <!-- Pilihan Periode Akademik dan Jenis Perwalian -->
                     <div class="row mb-4">
                         <div class="col-md-6">
@@ -62,10 +62,10 @@
                             <select name="academic_period_id" class="form-select" required>
                                 <option value="">-- Pilih Periode Akademik --</option>
                                 @foreach($periods as $period)
-                                    <option value="{{ $period->id }}" {{ old('academic_period_id') == $period->id ? 'selected' : '' }}>
-                                        {{ $period->semester }} {{ $period->tahun_akademik }}
-                                        ({{ $period->start_date->format('d/m/Y') }} - {{ $period->end_date->format('d/m/Y') }})
-                                    </option>
+                                <option value="{{ $period->id }}" {{ old('academic_period_id') == $period->id ? 'selected' : '' }}>
+                                    {{ $period->semester }} {{ $period->tahun_akademik }}
+                                    <!-- ({{ $period->start_date->format('d/m/Y') }} - {{ $period->end_date->format('d/m/Y') }}) -->
+                                </option>
                                 @endforeach
                             </select>
                             <small class="text-muted">Pilih periode akademik yang sedang berjalan</small>
@@ -80,20 +80,20 @@
                             <small class="text-muted">Mahasiswa akan otomatis didaftarkan ke jenis perwalian ini pada periode yang dipilih</small>
                         </div>
                     </div>
-                    
+
                     <div class="mb-4">
                         <label class="form-label fw-bold">Pilih File Excel <span class="text-danger">*</span></label>
-                        <input type="file" 
-                               class="form-control @error('file') is-invalid @enderror" 
-                               name="file" 
-                               accept=".xlsx,.xls,.csv"
-                               required>
+                        <input type="file"
+                            class="form-control @error('file') is-invalid @enderror"
+                            name="file"
+                            accept=".xlsx,.xls,.csv"
+                            required>
                         @error('file')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                         <small class="text-muted">Format yang didukung: .xlsx, .xls, .csv (Max 10MB)</small>
                     </div>
-                    
+
                     <div class="mb-4">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="confirmImport" required>
@@ -102,7 +102,7 @@
                             </label>
                         </div>
                     </div>
-                    
+
                     <div class="d-flex justify-content-between">
                         <a href="{{ route('admin.mahasiswa.template') }}" class="btn btn-outline-primary">
                             <i class="bi bi-download"></i> Download Template
@@ -119,7 +119,7 @@
                 </form>
             </div>
         </div>
-        
+
         <div class="card mt-4">
             <div class="card-header-custom">
                 <h6 class="mb-0">Preview Format Template Excel</h6>
@@ -129,17 +129,17 @@
                     <table class="table table-sm table-bordered">
                         <thead class="table-light">
                             32
-                                <th>NPM</th>
-                                <th>Nama Mahasiswa</th>
-                                <th>NIK Dosen Wali</th>
-                                <th>Dosen Wali</th>
-                                <th>SKS Lulus</th>
-                                <th>SKS Tempuh</th>
-                                <th>SKS Sisa</th>
-                                <th>IPK</th>
-                                <th>IPK (3 digit)</th>
-                                <th>Tmpt Lahir</th>
-                                <th>Tgl Lahir</th>
+                            <th>NPM</th>
+                            <th>Nama Mahasiswa</th>
+                            <th>NIK Dosen Wali</th>
+                            <th>Dosen Wali</th>
+                            <th>SKS Lulus</th>
+                            <th>SKS Tempuh</th>
+                            <th>SKS Sisa</th>
+                            <th>IPK</th>
+                            <th>IPK (3 digit)</th>
+                            <th>Tmpt Lahir</th>
+                            <th>Tgl Lahir</th>
                             </tr>
                         </thead>
                         <tbody>

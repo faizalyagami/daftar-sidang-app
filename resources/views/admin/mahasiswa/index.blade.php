@@ -4,7 +4,8 @@
 
 @section('content')
 <style>
-    .status-skripsi, .status-metodologi {
+    .status-skripsi,
+    .status-metodologi {
         display: inline-block;
         padding: 4px 10px;
         border-radius: 12px;
@@ -12,32 +13,32 @@
         font-weight: 600;
         margin: 2px 0;
     }
-    
+
     .status-badge-pending {
         background: #e9ecef;
         color: #6c757d;
     }
-    
+
     .status-badge-approved {
         background: #d4edda;
         color: #155724;
     }
-    
+
     .status-badge-revision {
         background: #fff3cd;
         color: #856404;
     }
-    
+
     .status-badge-review {
         background: #d1ecf1;
         color: #0c5460;
     }
-    
+
     .status-badge-rejected {
         background: #f8d7da;
         color: #721c24;
     }
-    
+
     .status-label {
         font-size: 10px;
         font-weight: 700;
@@ -45,11 +46,11 @@
         margin-bottom: 3px;
         color: #6c757d;
     }
-    
+
     .status-wrapper {
         min-width: 180px;
     }
-    
+
     /* Custom Pagination */
     .custom-pagination {
         display: flex;
@@ -60,18 +61,18 @@
         background: #f8f9fa;
         border-radius: 12px;
     }
-    
+
     .pagination-info {
         color: #6c757d;
         font-size: 14px;
         margin-right: auto;
     }
-    
+
     .pagination {
         margin: 0;
         gap: 5px;
     }
-    
+
     .pagination .page-link {
         border: none;
         padding: 8px 14px;
@@ -82,32 +83,32 @@
         transition: all 0.3s;
         font-weight: 500;
     }
-    
+
     .pagination .page-link:hover {
         background: #667eea;
         color: white;
         transform: translateY(-2px);
     }
-    
+
     .pagination .active .page-link {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
-    
+
     .per-page-selector {
         display: flex;
         align-items: center;
         gap: 10px;
         margin-left: 20px;
     }
-    
+
     .per-page-selector label {
         margin: 0;
         font-size: 13px;
         color: #6c757d;
     }
-    
+
     .duration-badge {
         font-size: 12px;
         font-weight: 500;
@@ -143,10 +144,10 @@
                     <select name="period_id" class="form-select" onchange="this.form.submit()">
                         <option value="">Semua Periode</option>
                         @foreach($periods as $period)
-                            <option value="{{ $period->id }}" {{ request('period_id') == $period->id ? 'selected' : '' }}>
-                                {{ $period->semester }} {{ $period->tahun_akademik }}
-                                ({{ $period->start_date->format('d/m/Y') }} - {{ $period->end_date->format('d/m/Y') }})
-                            </option>
+                        <option value="{{ $period->id }}" {{ request('period_id') == $period->id ? 'selected' : '' }}>
+                            {{ $period->semester }} {{ $period->tahun_akademik }}
+                            <!-- ({{ $period->start_date->format('d/m/Y') }} - {{ $period->end_date->format('d/m/Y') }}) -->
+                        </option>
                         @endforeach
                     </select>
                 </div>
@@ -171,106 +172,81 @@
                         <th>Tempat/Tgl Lahir</th>
                         <th>Lama Skripsi</th>
                         <th>Lama Metodologi</th>
+                        <th>Riwayat Skripsi</th>
+                        <th>Riwayat Metodologi</th>
                         <th>Status Pendaftaran</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($mahasiswas as $index => $mahasiswa)
-                    @php
-                        $no = ($mahasiswas->currentPage() - 1) * $mahasiswas->perPage() + $index + 1;
-
-                        $skripsiStatus = $mahasiswa->pendaftaranSkripsi->last();
-                        $metodologiStatus = $mahasiswa->pendaftaranMetodologi->last();
-
-                        // Skripsi status label
-                        $skripsiStatusText = '';
-                        $skripsiStatusClass = '';
-                        if (!$skripsiStatus) {
-                            $skripsiStatusText = 'Belum Mendaftar';
-                            $skripsiStatusClass = 'status-badge-pending';
-                        } elseif ($skripsiStatus->status == 'pending') {
-                            $skripsiStatusText = 'Menunggu Review';
-                            $skripsiStatusClass = 'status-badge-pending';
-                        } elseif ($skripsiStatus->status == 'review') {
-                            $skripsiStatusText = 'Sedang Direview';
-                            $skripsiStatusClass = 'status-badge-review';
-                        } elseif ($skripsiStatus->status == 'approved') {
-                            $skripsiStatusText = '✅ Lanjut Sidang';
-                            $skripsiStatusClass = 'status-badge-approved';
-                        } elseif ($skripsiStatus->status == 'revision') {
-                            $skripsiStatusText = '⚠️ Perlu Revisi';
-                            $skripsiStatusClass = 'status-badge-revision';
-                        } elseif ($skripsiStatus->status == 'rejected') {
-                            $skripsiStatusText = '❌ Ditolak';
-                            $skripsiStatusClass = 'status-badge-rejected';
-                        }
-
-                        // Metodologi status label
-                        $metodologiStatusText = '';
-                        $metodologiStatusClass = '';
-                        if (!$metodologiStatus) {
-                            $metodologiStatusText = 'Belum Mendaftar';
-                            $metodologiStatusClass = 'status-badge-pending';
-                        } elseif ($metodologiStatus->status == 'pending') {
-                            $metodologiStatusText = 'Menunggu Review';
-                            $metodologiStatusClass = 'status-badge-pending';
-                        } elseif ($metodologiStatus->status == 'review') {
-                            $metodologiStatusText = 'Sedang Direview';
-                            $metodologiStatusClass = 'status-badge-review';
-                        } elseif ($metodologiStatus->status == 'approved') {
-                            $metodologiStatusText = '✅ Lanjut Ujian';
-                            $metodologiStatusClass = 'status-badge-approved';
-                        } elseif ($metodologiStatus->status == 'revision') {
-                            $metodologiStatusText = '⚠️ Perlu Revisi';
-                            $metodologiStatusClass = 'status-badge-revision';
-                        } elseif ($metodologiStatus->status == 'rejected') {
-                            $metodologiStatusText = '❌ Ditolak';
-                            $metodologiStatusClass = 'status-badge-rejected';
-                        }
-
-                        // Durasi
-                        $skripsiDuration = $mahasiswa->getSkripsiDuration();
-                        $metodologiDuration = $mahasiswa->getMetodologiDuration();
-                    @endphp
+                    {{-- baris data --}}
                     <tr>
-                        <td class="align-middle">{{ $no }}</td>
+                        <td class="align-middle">{{ ($mahasiswas->currentPage() - 1) * $mahasiswas->perPage() + $index + 1 }}</td>
                         <td class="align-middle"><strong>{{ $mahasiswa->npm }}</strong></td>
                         <td class="align-middle">{{ $mahasiswa->user->name }}</td>
                         <td class="align-middle">{{ $mahasiswa->user->email }}</td>
                         <td class="align-middle">{{ $mahasiswa->dosen_wali ?? '-' }}</td>
                         <td class="align-middle">
                             @if($mahasiswa->ipk)
-                                <span class="badge bg-{{ $mahasiswa->ipk >= 3.0 ? 'success' : ($mahasiswa->ipk >= 2.5 ? 'warning' : 'danger') }}">
-                                    {{ number_format($mahasiswa->ipk, 3) }}
-                                </span>
+                            <span class="badge bg-{{ $mahasiswa->ipk >= 3.0 ? 'success' : ($mahasiswa->ipk >= 2.5 ? 'warning' : 'danger') }}">
+                                {{ number_format($mahasiswa->ipk, 3) }}
+                            </span>
                             @else
-                                -
+                            -
                             @endif
                         </td>
                         <td class="align-middle">
                             @if($mahasiswa->tempat_lahir && $mahasiswa->tanggal_lahir)
-                                {{ $mahasiswa->tempat_lahir }}, {{ $mahasiswa->tanggal_lahir->format('d/m/Y') }}
+                            {{ $mahasiswa->tempat_lahir }}, {{ $mahasiswa->tanggal_lahir->format('d/m/Y') }}
                             @else
-                                -
+                            -
                             @endif
                         </td>
                         <td class="align-middle">
-                            @if($skripsiDuration)
-                                <span class="duration-badge" title="Mulai: {{ $mahasiswa->pendaftaranSkripsi->first()->created_at->format('d/m/Y') }}">
-                                    {{ $skripsiDuration }}
-                                </span>
+                            @php $durasiSkripsi = $mahasiswa->getSkripsiDuration(); @endphp
+                            @if($durasiSkripsi)
+                            <span class="duration-badge">{{ $durasiSkripsi }}</span>
                             @else
-                                -
+                            -
                             @endif
                         </td>
                         <td class="align-middle">
-                            @if($metodologiDuration)
-                                <span class="duration-badge" title="Mulai: {{ $mahasiswa->pendaftaranMetodologi->first()->created_at->format('d/m/Y') }}">
-                                    {{ $metodologiDuration }}
-                                </span>
+                            @php $durasiMetodologi = $mahasiswa->getMetodologiDuration(); @endphp
+                            @if($durasiMetodologi)
+                            <span class="duration-badge">{{ $durasiMetodologi }}</span>
                             @else
-                                -
+                            -
+                            @endif
+                        </td>
+                        <td class="align-middle">
+                            @php $riwayatSkripsi = $mahasiswa->getSkripsiPeriods(); @endphp
+                            @if($riwayatSkripsi->count())
+                            <div class="d-flex align-items-center">
+                                <div class="d-flex gap-1">
+                                    @foreach($riwayatSkripsi as $period)
+                                    <span class="badge bg-primary period-badge" title="{{ $period }}">{{ $loop->iteration }}</span>
+                                    @endforeach
+                                </div>
+                                <i class="bi bi-info-circle info-icon" onclick="showPeriods('skripsi', {{ $mahasiswa->id }})"></i>
+                            </div>
+                            @else
+                            -
+                            @endif
+                        </td>
+                        <td class="align-middle">
+                            @php $riwayatMetodologi = $mahasiswa->getMetodologiPeriods(); @endphp
+                            @if($riwayatMetodologi->count())
+                            <div class="d-flex align-items-center">
+                                <div class="d-flex gap-1">
+                                    @foreach($riwayatMetodologi as $period)
+                                    <span class="badge bg-success period-badge" title="{{ $period }}">{{ $loop->iteration }}</span>
+                                    @endforeach
+                                </div>
+                                <i class="bi bi-info-circle info-icon" onclick="showPeriods('metodologi', {{ $mahasiswa->id }})"></i>
+                            </div>
+                            @else
+                            -
                             @endif
                         </td>
                         <td class="align-middle">
@@ -278,14 +254,14 @@
                                 <div class="status-label">
                                     <i class="bi bi-file-earmark-text"></i> SIDANG SKRIPSI
                                 </div>
-                                <span class="status-skripsi {{ $skripsiStatusClass }}">
-                                    {{ $skripsiStatusText }}
+                                <span class="status-skripsi {{ $skripsiStatusClass ?? 'status-badge-pending' }}">
+                                    {{ $skripsiStatusText ?? 'Belum Mendaftar' }}
                                 </span>
                                 <div class="status-label mt-2">
                                     <i class="bi bi-book"></i> UJIAN METODOLOGI
                                 </div>
-                                <span class="status-metodologi {{ $metodologiStatusClass }}">
-                                    {{ $metodologiStatusText }}
+                                <span class="status-metodologi {{ $metodologiStatusClass ?? 'status-badge-pending' }}">
+                                    {{ $metodologiStatusText ?? 'Belum Mendaftar' }}
                                 </span>
                             </div>
                         </td>
@@ -297,24 +273,17 @@
                                 <button class="btn btn-sm btn-warning" onclick="resetPassword({{ $mahasiswa->user->id }})" title="Reset Password">
                                     <i class="bi bi-key"></i>
                                 </button>
-                                @if($skripsiStatus && $skripsiStatus->status == 'approved')
-                                    <button class="btn btn-sm btn-success" onclick="printSkripsi({{ $skripsiStatus->id }})" title="Cetak Surat Sidang">
-                                        <i class="bi bi-printer"></i>
-                                    </button>
-                                @endif
-                                @if($metodologiStatus && $metodologiStatus->status == 'approved')
-                                    <button class="btn btn-sm btn-success" onclick="printMetodologi({{ $metodologiStatus->id }})" title="Cetak Surat Ujian">
-                                        <i class="bi bi-printer"></i>
-                                    </button>
-                                @endif
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="11" class="text-center py-5">
+                        <td colspan="13" class="text-center py-5">
                             <i class="bi bi-inbox fs-1 text-muted"></i>
-                            <p class="text-muted mt-2 mb-0">Belum ada data mahasiswa</p>
+                            <p class="text-muted mt-2 mb-0">Tidak ada data mahasiswa yang ditemukan</p>
+                            @if(request('period_id'))
+                            <p class="text-muted small mt-1">Tidak ada mahasiswa yang terdaftar pada periode yang dipilih.</p>
+                            @endif
                         </td>
                     </tr>
                     @endforelse
@@ -326,15 +295,15 @@
         <div class="custom-pagination">
             <div class="pagination-info">
                 <i class="bi bi-info-circle me-1"></i>
-                Menampilkan 
-                <strong>{{ $mahasiswas->firstItem() ?? 0 }}</strong> 
-                sampai 
-                <strong>{{ $mahasiswas->lastItem() ?? 0 }}</strong> 
-                dari 
-                <strong>{{ $mahasiswas->total() }}</strong> 
+                Menampilkan
+                <strong>{{ $mahasiswas->firstItem() ?? 0 }}</strong>
+                sampai
+                <strong>{{ $mahasiswas->lastItem() ?? 0 }}</strong>
+                dari
+                <strong>{{ $mahasiswas->total() }}</strong>
                 data
                 @if(request('period_id'))
-                    <span class="text-muted"> - Filter periode aktif</span>
+                <span class="text-muted"> - Filter periode: {{ $periods->where('id', request('period_id'))->first()->semester ?? '' }} {{ $periods->where('id', request('period_id'))->first()->tahun_akademik ?? '' }}</span>
                 @endif
             </div>
             <div class="d-flex align-items-center">
@@ -353,7 +322,7 @@
     </div>
 </div>
 
-<!-- Modal View User (sama seperti sebelumnya) -->
+<!-- Modal View User -->
 <div class="modal fade" id="userModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -380,17 +349,37 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
-        $('#mahasiswaTable').DataTable({
-            paging: false,
-            searching: true,
-            ordering: true,
-            columnDefs: [
-                { orderable: false, targets: [9, 10] } // kolom status dan aksi tidak bisa diurutkan
-            ],
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json'
-            }
-        });
+        // Inisialisasi DataTable hanya jika tabel memiliki data
+        var table = $('#mahasiswaTable');
+        var hasData = table.find('tbody tr:not(.no-data)').length > 0;
+
+        if (hasData) {
+            table.DataTable({
+                paging: false,
+                searching: true,
+                ordering: true,
+                columnDefs: [{
+                        orderable: false,
+                        targets: [11, 12]
+                    } // kolom status dan aksi
+                ],
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json',
+                    emptyTable: 'Tidak ada data yang tersedia'
+                }
+            });
+        } else {
+            // Inisialisasi DataTable tanpa fitur sorting pada kolom tertentu
+            table.DataTable({
+                paging: false,
+                searching: true,
+                ordering: false,
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json',
+                    emptyTable: 'Tidak ada data mahasiswa yang ditemukan'
+                }
+            });
+        }
     });
 
     // Per Page Selector
@@ -401,14 +390,12 @@
         window.location.href = url.toString();
     });
 
-    // View Mahasiswa Detail (AJAX)
+    // View Mahasiswa Detail
     function viewMahasiswa(id) {
         const modal = new bootstrap.Modal(document.getElementById('userModal'));
         const modalBody = document.getElementById('userModalBody');
-
         modal.show();
         modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-
         fetch('/admin/mahasiswa/' + id + '/detail')
             .then(response => response.text())
             .then(html => {
@@ -432,43 +419,61 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 fetch('/admin/users/' + userId + '/reset-password', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            title: 'Berhasil!',
-                            text: data.message,
-                            icon: 'success',
-                            confirmButtonText: 'OK'
-                        });
-                    } else {
-                        Swal.fire({
-                            title: 'Gagal!',
-                            text: data.message,
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        });
-                    }
-                })
-                .catch(() => {
-                    Swal.fire('Gagal!', 'Terjadi kesalahan saat mereset password.', 'error');
-                });
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Berhasil!',
+                                text: data.message,
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Gagal!',
+                                text: data.message,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire('Gagal!', 'Terjadi kesalahan saat mereset password.', 'error');
+                    });
             }
         });
     }
 
-    // Print functions
-    function printSkripsi(id) {
-        window.open('/admin/pendaftaran/skripsi/' + id + '/print', '_blank');
-    }
-    function printMetodologi(id) {
-        window.open('/admin/pendaftaran/metodologi/' + id + '/print', '_blank');
+    // Show period details
+    function showPeriods(jenis, mahasiswaId) {
+        fetch(`/admin/mahasiswa/${mahasiswaId}/periods?jenis=${jenis}`)
+            .then(response => response.json())
+            .then(data => {
+                let html = '<ul class="list-group">';
+                if (data.length === 0) {
+                    html += '<li class="list-group-item text-muted">Belum ada riwayat</li>';
+                } else {
+                    data.forEach((period, idx) => {
+                        html += `<li class="list-group-item">${idx+1}. ${period}</li>`;
+                    });
+                }
+                html += '</ul>';
+                Swal.fire({
+                    title: `Riwayat ${jenis == 'skripsi' ? 'Skripsi' : 'Metodologi'}`,
+                    html: html,
+                    icon: 'info',
+                    confirmButtonText: 'Tutup'
+                });
+            })
+            .catch(() => {
+                Swal.fire('Error', 'Gagal memuat data riwayat', 'error');
+            });
     }
 </script>
 @endpush

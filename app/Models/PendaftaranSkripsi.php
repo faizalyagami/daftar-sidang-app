@@ -10,14 +10,15 @@ class PendaftaranSkripsi extends Model
     use HasFactory;
 
     protected $table = 'pendaftaran_skripsi';
-    
+
     protected $fillable = [
-        'mahasiswa_id', 
-        'judul_skripsi', 
-        'dosen_pembimbing', 
-        'narasumber', 
-        'tanggal_seminar', 
-        'status', 
+        'mahasiswa_id',
+        'academic_period_id',
+        'judul_skripsi',
+        'dosen_pembimbing',
+        'narasumber',
+        'tanggal_seminar',
+        'status',
         'reviewer_notes',
         'reviewer_id',
         'assigned_at'
@@ -47,16 +48,16 @@ class PendaftaranSkripsi extends Model
     {
         return $this->morphMany(ReviewDetail::class, 'pendaftaran');
     }
-    
+
     public function allDocumentsValid()
     {
         $invalidDocs = $this->reviewDetails()
             ->where('status', '!=', 'valid')
             ->count();
-        
+
         return $invalidDocs == 0;
     }
-    
+
     public function updateStatusFromReviews()
     {
         if ($this->allDocumentsValid()) {
@@ -68,7 +69,8 @@ class PendaftaranSkripsi extends Model
         }
     }
 
-    public function academicPeriod() {
+    public function academicPeriod()
+    {
         return $this->belongsTo(AcademicPeriod::class);
     }
 }
