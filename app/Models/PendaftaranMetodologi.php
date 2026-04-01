@@ -56,4 +56,8 @@ class PendaftaranMetodologi extends Model
             $this->update(['status' => 'review']);
         }
     }
+
+    public function academicPeriod() {
+        return $this->belongsTo(AcademicPeriod::class);
+    }
 }

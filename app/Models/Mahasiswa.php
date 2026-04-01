@@ -33,4 +33,56 @@ class Mahasiswa extends Model
     {
         return $this->hasMany(PendaftaranMetodologi::class);
     }
+
+    public function getSkripsiDuration() {
+        $first = $this->pendaftaranSkripsi()->orderBy('created_at', 'asc')->first();
+        if (!$first) return null;
+
+        $last = $this->pendaftaranSkripsi()->orderBy('created_at', 'desc')->first();
+        $start = $first->created_at;
+        $end = $last->created_at ?? now();
+
+        $diff = $start->diff($end);
+        $years = $diff->y;
+        $months = $diff->m;
+
+        return "{$years} tahun {$months} bulan";
+    }
+
+    public function getMetodologiDuration() {
+        $first = $this->pendaftaranMetodologi()->orderBy('created_at', 'asc')->first();
+        if (!$first) return null;
+
+        $last = $this->pendaftaranMetodologi()->orderBy('created_at', 'desc')->first();
+        $start = $first->created_at;
+        $end = $last->created_at ?? now();
+
+        $diff = $start->diff($end);
+        $years = $diff->y;
+        $months = $diff->m;
+
+        return "{$years} tahun {$months} bulan";
+    }
+
+    public function getSkripsiPeriods()
+    {
+        return $this->pendaftaranSkripsi()
+            ->with('academicPeriod')
+            ->orderBy('created_at')
+            ->get()
+            ->map(function ($p) {
+                return $p->academicPeriod ? $p->academicPeriod->semester . ' ' . $p->academicPeriod->tahun_akademik : 'Periode tidak diketahui';
+            });
+    }
+
+    public function getMetodologiPeriods()
+    {
+        return $this->pendaftaranMetodologi()
+            ->with('academicPeriod')
+            ->orderBy('created_at')
+            ->get()
+            ->map(function ($p) {
+                return $p->academicPeriod ? $p->academicPeriod->semester . ' ' . $p->academicPeriod->tahun_akademik : 'Periode tidak diketahui';
+            });
+    }
 }

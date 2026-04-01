@@ -54,6 +54,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/academic-periods/{id}/set-active', [AcademicPeriodController::class, 'setActive'])->name('academic-periods.set-active');
     Route::post('/users/{id}/reset-password', [AdminController::class, 'resetPassword'])->name('users.reset-password');
     Route::get('/reviewers/stats', [AdminController::class, 'reviewerStats'])->name('reviewers.stats');
+    Route::get('/mahasiswa/{id}/periods', [AdminController::class, 'getMahasiswaPeriods'])->name('admin.mahasiswa.periods');
 });
 
 // Reviewer routes

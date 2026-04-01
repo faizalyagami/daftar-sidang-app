@@ -55,6 +55,32 @@
                       id="importForm">
                     @csrf
                     
+                    <!-- Pilihan Periode Akademik dan Jenis Perwalian -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Periode Akademik <span class="text-danger">*</span></label>
+                            <select name="academic_period_id" class="form-select" required>
+                                <option value="">-- Pilih Periode Akademik --</option>
+                                @foreach($periods as $period)
+                                    <option value="{{ $period->id }}" {{ old('academic_period_id') == $period->id ? 'selected' : '' }}>
+                                        {{ $period->semester }} {{ $period->tahun_akademik }}
+                                        ({{ $period->start_date->format('d/m/Y') }} - {{ $period->end_date->format('d/m/Y') }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Pilih periode akademik yang sedang berjalan</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Jenis Perwalian <span class="text-danger">*</span></label>
+                            <select name="jenis_perwalian" class="form-select" required>
+                                <option value="">-- Pilih Jenis Perwalian --</option>
+                                <option value="skripsi" {{ old('jenis_perwalian') == 'skripsi' ? 'selected' : '' }}>Skripsi</option>
+                                <option value="metodologi" {{ old('jenis_perwalian') == 'metodologi' ? 'selected' : '' }}>Metodologi Penelitian</option>
+                            </select>
+                            <small class="text-muted">Mahasiswa akan otomatis didaftarkan ke jenis perwalian ini pada periode yang dipilih</small>
+                        </div>
+                    </div>
+                    
                     <div class="mb-4">
                         <label class="form-label fw-bold">Pilih File Excel <span class="text-danger">*</span></label>
                         <input type="file" 
@@ -72,7 +98,7 @@
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="confirmImport" required>
                             <label class="form-check-label" for="confirmImport">
-                                Saya mengkonfirmasi bahwa data yang diimport sudah sesuai dengan format template
+                                Saya mengkonfirmasi bahwa data yang diimport sudah sesuai dengan format template dan periode yang dipilih.
                             </label>
                         </div>
                     </div>
@@ -102,7 +128,7 @@
                 <div class="table-responsive">
                     <table class="table table-sm table-bordered">
                         <thead class="table-light">
-                            <tr>
+                            32
                                 <th>NPM</th>
                                 <th>Nama Mahasiswa</th>
                                 <th>NIK Dosen Wali</th>

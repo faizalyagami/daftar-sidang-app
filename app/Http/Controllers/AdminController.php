@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\MahasiswaImport;
+use App\Models\AcademicPeriod;
 use App\Services\ReviewerAssignmentService;
 
 class AdminController extends Controller
@@ -130,12 +131,28 @@ class AdminController extends Controller
         return redirect()->route('admin.users')->with('success', 'User berhasil ditambahkan');
     }
 
-    public function allPendaftaran()
+    public function allPendaftaran(Request $request)
     {
-        $skripsi = PendaftaranSkripsi::with('mahasiswa.user')->latest()->get();
-        $metodologi = PendaftaranMetodologi::with('mahasiswa.user')->latest()->get();
-        
-        return view('admin.pendaftaran.index', compact('skripsi', 'metodologi'));
+        $periodId = $request->get('period_id');
+
+        $skripsi = PendaftaranSkripsi::with('mahasiswa.user', 'academicPeriod')
+            ->when($periodId, function ($query, $periodId) {
+                return $query->where('academic_period_id', $periodId);
+            })
+            ->latest()
+            ->get();
+
+        $metodologi = PendaftaranMetodologi::with('mahasiswa.user', 'academicPeriod')
+            ->when($periodId, function ($query, $periodId) {
+                return $query->where('academic_period_id', $periodId);
+            })
+            ->latest()
+            ->get();
+
+        // Ambil semua periode akademik untuk filter
+        $periods = AcademicPeriod::orderBy('tahun_akademik', 'desc')->get();
+
+        return view('admin.pendaftaran.index', compact('skripsi', 'metodologi', 'periods'));
     }
 
     public function showSkripsi($id)
@@ -151,22 +168,30 @@ class AdminController extends Controller
     }
 
     public function importMahasiswa()
-    {
-        return view('admin.mahasiswa.import');
+    {   
+        $periods = AcademicPeriod::orderBy('tahun_akademik', 'desc')->get();
+        return view('admin.mahasiswa.import', compact('periods'));
     }
     
     public function importMahasiswaProcess(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240'
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+            'academic_period_id' => 'required|exists:academic_periods,id',
+            'jenis_perwalian' => 'required|in:skripsi,metodologi',
         ]);
         
+        $academicPeriod = AcademicPeriod::findOrFail($request->academic_period_id);
+        $jenis = $request->jenis_perwalian;
+
         try {
-            $import = new MahasiswaImport();
+            // Perbaiki urutan parameter: (jenis_perwalian, academic_period_id)
+            $import = new MahasiswaImport($jenis, $academicPeriod->id);
             Excel::import($import, $request->file('file'));
             
             $importedCount = $import->getImportedCount();
             $updatedCount = $import->getUpdatedCount();
+            $registeredCount = $import->getRegisteredCount(); // jumlah pendaftaran yang dibuat
             $errors = $import->getErrors();
             
             if ($importedCount == 0 && $updatedCount == 0 && count($errors) > 0) {
@@ -177,10 +202,13 @@ class AdminController extends Controller
             
             $message = "Import selesai!";
             if ($importedCount > 0) {
-                $message .= " <strong>{$importedCount}</strong> data baru ditambahkan.";
+                $message .= " <strong>{$importedCount}</strong> data mahasiswa baru ditambahkan.";
             }
             if ($updatedCount > 0) {
-                $message .= " <strong>{$updatedCount}</strong> data diupdate.";
+                $message .= " <strong>{$updatedCount}</strong> data mahasiswa diupdate.";
+            }
+            if ($registeredCount > 0) {
+                $message .= " <strong>{$registeredCount}</strong> pendaftaran {$jenis} berhasil dibuat.";
             }
             
             if (count($errors) > 0) {
@@ -200,10 +228,29 @@ class AdminController extends Controller
         }
     }
     
-    public function mahasiswaList()
-    {
-        $mahasiswas = Mahasiswa::with('user')->latest()->paginate(20);
-        return view('admin.mahasiswa.index', compact('mahasiswas'));
+    public function mahasiswaList(Request $request)
+    {   
+        $perPage = $request->get('per_page', 20);
+        $periodId = $request->get('period_id');
+
+        $query = Mahasiswa::with('user', 'pendaftaranSkripsi', 'pendaftaranMetodologi');
+
+        // Filter berdasarkan periode pendaftaran (skripsi atau metodologi)
+        if ($periodId) {
+            $query->where(function ($q) use ($periodId) {
+                $q->whereHas('pendaftaranSkripsi', function ($sub) use ($periodId) {
+                    $sub->where('academic_period_id', $periodId);
+                })->orWhereHas('pendaftaranMetodologi', function ($sub) use ($periodId) {
+                    $sub->where('academic_period_id', $periodId);
+                });
+            });
+        }
+
+        $mahasiswas = $query->latest()->paginate($perPage);
+
+        $periods = AcademicPeriod::orderBy('tahun_akademik', 'desc')->get();
+
+        return view('admin.mahasiswa.index', compact('mahasiswas', 'periods'));
     }
 
     public function mahasiswaDetail($id)
@@ -329,5 +376,31 @@ class AdminController extends Controller
         }
         
         return response()->json(['success' => false, 'message' => 'Gagal reset password'], 400);
+    }
+
+    public function getMahasiswaPeriods($id, Request $request)
+    {
+        $jenis = $request->get('jenis');
+        $mahasiswa = Mahasiswa::findOrFail($id);
+
+        if ($jenis == 'skripsi') {
+            $periods = $mahasiswa->pendaftaranSkripsi()
+                ->with('academicPeriod')
+                ->orderBy('created_at')
+                ->get()
+                ->map(function ($p) {
+                    return $p->academicPeriod ? $p->academicPeriod->semester . ' ' . $p->academicPeriod->tahun_akademik : 'Periode tidak diketahui';
+                });
+        } else {
+            $periods = $mahasiswa->pendaftaranMetodologi()
+                ->with('academicPeriod')
+                ->orderBy('created_at')
+                ->get()
+                ->map(function ($p) {
+                    return $p->academicPeriod ? $p->academicPeriod->semester . ' ' . $p->academicPeriod->tahun_akademik : 'Periode tidak diketahui';
+                });
+        }
+
+        return response()->json($periods);
     }
 }

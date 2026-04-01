@@ -36,8 +36,23 @@ class MahasiswaController extends Controller
         $mahasiswa = Auth::user()->mahasiswa;
         $pendaftaranSkripsi = $mahasiswa->pendaftaranSkripsi()->latest()->get();
         $pendaftaranMetodologi = $mahasiswa->pendaftaranMetodologi()->latest()->get();
-        
-        return view('mahasiswa.dashboard', compact('pendaftaranSkripsi', 'pendaftaranMetodologi'));
+
+        // Durasi
+        $skripsiDuration = $mahasiswa->getSkripsiDuration();
+        $metodologiDuration = $mahasiswa->getMetodologiDuration();
+
+        // Riwayat periode
+        $skripsiPeriods = $mahasiswa->getSkripsiPeriods();
+        $metodologiPeriods = $mahasiswa->getMetodologiPeriods();
+
+        return view('mahasiswa.dashboard', compact(
+            'pendaftaranSkripsi',
+            'pendaftaranMetodologi',
+            'skripsiDuration',
+            'metodologiDuration',
+            'skripsiPeriods',
+            'metodologiPeriods'
+        ));
     }
     
     public function daftarSkripsi()
@@ -66,11 +81,16 @@ class MahasiswaController extends Controller
                 'surat_lolos_turnitin' => 'required|file|mimes:pdf|max:2048',
                 'sertifikat_toefl' => 'required|file|mimes:pdf|max:2048',
                 'pas_foto' => 'required|file|mimes:jpg,jpeg,png|max:2048',
-                'buku_bimbingan' => 'required|file|mimes:pdf|max:2048',
+                'buku_bimbingan' => 'required|file|mimes:pdf|max:2048', 
                 'surat_perbaikan' => 'required|file|mimes:pdf|max:2048',
                 'surat_ijin_sidang' => 'required|file|mimes:pdf|max:2048',
                 'berkas_skripsi' => 'required|file|mimes:pdf|max:10240',
             ]);
+            
+            $activePeriod = AcademicPeriod::getActive();
+            if (!$activePeriod) {
+                return redirect()->back()->with('error', 'Pendaftaran Sidang Skripsi sedang ditutup.');
+            }
 
             $mahasiswa = Auth::user()->mahasiswa;
 
@@ -84,7 +104,8 @@ class MahasiswaController extends Controller
                 'dosen_pembimbing' => $request->dosen_pembimbing,
                 'narasumber' => $request->narasumber,
                 'tanggal_seminar' => $request->tanggal_seminar,
-                'status' => 'pending'
+                'status' => 'pending',
+                'academic_period_id' => $activePeriod->id,
             ]);
 
             // Upload dokumen
@@ -148,6 +169,11 @@ class MahasiswaController extends Controller
             'lembar_pengesahan' => 'required|file|mimes:pdf|max:2048',
         ]);
 
+        $activePeriod = AcademicPeriod::getActive();
+        if (!$activePeriod) {
+            return redirect()->back()->with('error', 'Pendaftaran Ujian Metodologi Penelitian sedang ditutup.');
+        }
+
         $mahasiswa = Auth::user()->mahasiswa;
         
         // Update no_hp if provided
@@ -162,7 +188,8 @@ class MahasiswaController extends Controller
             'dosen_pembimbing' => $request->dosen_pembimbing,
             'dosen_pembimbing_2' => $request->dosen_pembimbing_2,
             'kuliah_peminatan' => $request->kuliah_peminatan,
-            'status' => 'pending'
+            'status' => 'pending',
+            'academic_period_id' => $activePeriod->id,
         ]);
 
         // Upload dokumen
