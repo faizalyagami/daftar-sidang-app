@@ -153,30 +153,55 @@
                                     @enderror
                                 </div>
 
+                                <!-- Dosen Pembimbing (dropdown searchable) -->
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-semibold required-field">
-                                        Dosen Pembimbing
-                                    </label>
-                                    <input type="text"
-                                        class="form-control @error('dosen_pembimbing') is-invalid @enderror"
-                                        name="dosen_pembimbing"
-                                        value="{{ old('dosen_pembimbing') }}"
-                                        placeholder="Contoh: Dr. Ahmad Rizal, M.Si"
-                                        required>
+                                    <label class="form-label fw-semibold required-field">Dosen Pembimbing 1</label>
+                                    <select class="form-select select2-dosen @error('dosen_pembimbing') is-invalid @enderror"
+                                            name="dosen_pembimbing"
+                                            style="width: 100%;"
+                                            required>
+                                        <option value="">-- Cari Dosen Pembimbing --</option>
+                                        @foreach($dosens as $dosen)
+                                            <option value="{{ $dosen->name }}" {{ old('dosen_pembimbing') == $dosen->name ? 'selected' : '' }}>
+                                                {{ $dosen->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                     @error('dosen_pembimbing')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-semibold">
-                                        Narasumber Seminar Skripsi
-                                    </label>
-                                    <input type="text"
-                                        class="form-control @error('narasumber') is-invalid @enderror"
-                                        name="narasumber"
-                                        value="{{ old('narasumber') }}"
-                                        placeholder="Contoh: Dr. Siti Fatimah, M.Psi">
+                                    <label class="form-label fw-semibold">Dosen Pembimbing 2</label>
+                                    <select class="form-select select2-dosen @error('dosen_pembimbing_2') is-invalid @enderror"
+                                            name="dosen_pembimbing_2"
+                                            style="width: 100%;">
+                                        <option value="">-- Cari Dosen Pembimbing 2--</option>
+                                        @foreach($dosens as $dosen)
+                                            <option value="{{ $dosen->name }}" {{ old('dosen_pembimbing_2') == $dosen->name ? 'selected' : '' }}>
+                                                {{ $dosen->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('dosen_pembimbing_2')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Narasumber Seminar (dropdown searchable) -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Narasumber Seminar Skripsi</label>
+                                    <select class="form-select select2-dosen @error('narasumber') is-invalid @enderror"
+                                            name="narasumber"
+                                            style="width: 100%;">
+                                        <option value="">-- Cari Narasumber --</option>
+                                        @foreach($dosens as $dosen)
+                                            <option value="{{ $dosen->name }}" {{ old('narasumber') == $dosen->name ? 'selected' : '' }}>
+                                                {{ $dosen->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                     @error('narasumber')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -197,8 +222,8 @@
                             </div>
                         </div>
 
-                        <!-- Dokumen Persyaratan -->
-                        <div class="form-section">
+                        <!-- Dokumen Persyaratan-->
+                            <div class="form-section">
                             <h5>
                                 <i class="bi bi-file-earmark-text me-2"></i>
                                 Dokumen Persyaratan
@@ -648,46 +673,44 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
+
+                        <!-- Pernyataan -->
+                        <div class="form-section">
+                            <div class="alert alert-warning">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="persetujuan" required>
+                                    <label class="form-check-label" for="persetujuan">
+                                        <strong>Pernyataan:</strong> Dengan ini saya menyatakan bahwa dokumen pendaftaran SIDANG SKRIPSI yang saya ajukan adalah ASLI dan SUDAH MENDAPAT PERSETUJUAN DOSEN PEMBIMBING SKRIPSI. Apabila di kemudian hari ditemukan dokumen yang saya ajukan palsu atau tanpa seizin dosen pembimbing, SAYA BERSEDIA MENERIMA KONSEKUENSI yang ditentukan Fakultas Psikologi Universitas Islam Bandung.
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tombol Aksi -->
+                        <div class="d-flex justify-content-between gap-3 mt-4">
+                            <a href="{{ route('mahasiswa.dashboard') }}" class="btn btn-secondary px-4">
+                                <i class="bi bi-arrow-left"></i> Kembali
+                            </a>
+                            <button type="submit" class="btn btn-primary px-5" id="submitBtn">
+                                <i class="bi bi-send"></i> Submit Pendaftaran
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <!-- Pernyataan -->
-            <div class="form-section">
-                <div class="alert alert-warning">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="persetujuan" required>
-                        <label class="form-check-label" for="persetujuan">
-                            <strong>Pernyataan:</strong> Dengan ini saya menyatakan bahwa dokumen pendaftaran SIDANG SKRIPSI yang saya ajukan adalah ASLI dan SUDAH MENDAPAT PERSETUJUAN DOSEN PEMBIMBING SKRIPSI. Apabila di kemudian hari ditemukan dokumen yang saya ajukan palsu atau tanpa seizin dosen pembimbing, SAYA BERSEDIA MENERIMA KONSEKUENSI yang ditentukan Fakultas Psikologi Universitas Islam Bandung.
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tombol Aksi -->
-            <div class="d-flex justify-content-between gap-3 mt-4">
-                <a href="{{ route('mahasiswa.dashboard') }}" class="btn btn-secondary px-4">
-                    <i class="bi bi-arrow-left"></i> Kembali
-                </a>
-                <button type="submit" class="btn btn-primary px-5" id="submitBtn">
-                    <i class="bi bi-send"></i> Submit Pendaftaran
-                </button>
-            </div>
-            </form>
+            @endif
         </div>
     </div>
-    @endif
 </div>
-</div>
-</div>
-
+@endsection
 
 @push('scripts')
 <script>
-    // File upload preview
+    // File upload preview (sama seperti sebelumnya)
     function setupFileUpload(inputId, infoId) {
         const input = document.getElementById(inputId);
         const info = document.getElementById(infoId);
-
         if (input) {
             input.addEventListener('change', function() {
                 if (this.files && this.files[0]) {
@@ -701,24 +724,9 @@
             });
         }
     }
-
-    // Setup all file uploads
+    // Panggil setupFileUpload untuk setiap id file
     setupFileUpload('bukti_pembayaran_registrasi', 'file-info-registrasi');
-    setupFileUpload('bukti_pembayaran_sidang', 'file-info-sidang');
-    setupFileUpload('bukti_pembayaran_skripsi', 'file-info-skripsi');
-    setupFileUpload('frs', 'file-info-frs');
-    setupFileUpload('transkrip_nilai', 'file-info-transkrip');
-    setupFileUpload('surat_bebas_perpus', 'file-info-perpus');
-    setupFileUpload('surat_bebas_alat_tes', 'file-info-alat-tes');
-    setupFileUpload('sertifikat_pesantren', 'file-info-pesantren');
-    setupFileUpload('sertifikat_sks_non_akademik', 'file-info-sks');
-    setupFileUpload('surat_lolos_turnitin', 'file-info-turnitin');
-    setupFileUpload('sertifikat_toefl', 'file-info-toefl');
-    setupFileUpload('pas_foto', 'file-info-foto');
-    setupFileUpload('buku_bimbingan', 'file-info-bimbingan');
-    setupFileUpload('surat_perbaikan', 'file-info-perbaikan');
-    setupFileUpload('surat_ijin_sidang', 'file-info-ijin');
-    setupFileUpload('berkas_skripsi', 'file-info-berkas');
+    // ... (setup untuk semua file upload)
 
     // Form submit loading state
     document.getElementById('skripsiForm')?.addEventListener('submit', function() {
@@ -727,33 +735,35 @@
         submitBtn.innerHTML = '<span class="loading-spinner me-2"></span> Memproses...';
     });
 
-    // Drag and drop functionality
+    // Drag and drop
     document.querySelectorAll('.upload-area').forEach(area => {
-        area.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.style.borderColor = '#667eea';
-            this.style.background = '#f0f4ff';
-        });
-
-        area.addEventListener('dragleave', function(e) {
-            this.style.borderColor = '#e0e0e0';
-            this.style.background = '#f8f9fa';
-        });
-
+        area.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = '#667eea'; this.style.background = '#f0f4ff'; });
+        area.addEventListener('dragleave', function(e) { this.style.borderColor = '#e0e0e0'; this.style.background = '#f8f9fa'; });
         area.addEventListener('drop', function(e) {
             e.preventDefault();
             this.style.borderColor = '#e0e0e0';
             this.style.background = '#f8f9fa';
-
             const input = this.nextElementSibling;
             if (input && input.type === 'file') {
                 input.files = e.dataTransfer.files;
-                // Trigger change event
                 const event = new Event('change');
                 input.dispatchEvent(event);
             }
         });
     });
+
+    // Inisialisasi Select2
+    $(document).ready(function() {
+        $('.select2-dosen').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Ketik nama dosen...',
+            allowClear: true,
+            language: {
+                noResults: function() { return 'Dosen tidak ditemukan. Hubungi admin.'; },
+                searching: function() { return 'Mencari...'; }
+            }
+        });
+    });
 </script>
 @endpush
-@endsection

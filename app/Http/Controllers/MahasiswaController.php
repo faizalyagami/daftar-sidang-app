@@ -8,6 +8,7 @@ use App\Models\PendaftaranSkripsi;
 use App\Models\PendaftaranMetodologi;
 use App\Models\DokumenSkripsi;
 use App\Models\DokumenMetodologi;
+use App\Models\Dosen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -34,29 +35,47 @@ class MahasiswaController extends Controller
     public function dashboard()
     {
         $mahasiswa = Auth::user()->mahasiswa;
+        
+        // Pendaftaran
         $pendaftaranSkripsi = $mahasiswa->pendaftaranSkripsi()->latest()->get();
         $pendaftaranMetodologi = $mahasiswa->pendaftaranMetodologi()->latest()->get();
-
+        
         // Durasi
         $skripsiDuration = $mahasiswa->getSkripsiDuration();
         $metodologiDuration = $mahasiswa->getMetodologiDuration();
-
+        
         // Riwayat periode
         $skripsiPeriods = $mahasiswa->getSkripsiPeriods();
         $metodologiPeriods = $mahasiswa->getMetodologiPeriods();
-
+        
+        // --- Ambil jadwal untuk pendaftaran yang sudah approved ---
+        $jadwalSkripsi = null;
+        $skripsiApproved = $pendaftaranSkripsi->where('status', 'approved')->first();
+        if ($skripsiApproved && $skripsiApproved->jadwal) {
+            $jadwalSkripsi = $skripsiApproved->jadwal;
+        }
+        
+        $jadwalMetodologi = null;
+        $metodologiApproved = $pendaftaranMetodologi->where('status', 'approved')->first();
+        if ($metodologiApproved && $metodologiApproved->jadwal) {
+            $jadwalMetodologi = $metodologiApproved->jadwal;
+        }
+        
         return view('mahasiswa.dashboard', compact(
             'pendaftaranSkripsi',
             'pendaftaranMetodologi',
             'skripsiDuration',
             'metodologiDuration',
             'skripsiPeriods',
-            'metodologiPeriods'
+            'metodologiPeriods',
+            'jadwalSkripsi',
+            'jadwalMetodologi'
         ));
     }
 
     public function daftarSkripsi()
-    {
+    {   
+        $dosens = Dosen::active()->orderBy('name')->get();
         $activePeriod = AcademicPeriod::getActive();
         if (!$activePeriod) {
             return redirect()->route('mahasiswa.dashboard')
@@ -67,7 +86,7 @@ class MahasiswaController extends Controller
             return redirect()->route('mahasiswa.dashboard')
                 ->with('error', 'Pendaftaran sidang skripsi sedang ditutup untuk periode ini.');
         }
-        return view('mahasiswa.daftar-skripsi', compact('activePeriod'));
+        return view('mahasiswa.daftar-skripsi', compact('activePeriod', 'dosens'));
     }
 
     public function storeSkripsi(Request $request)

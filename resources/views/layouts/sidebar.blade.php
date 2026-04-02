@@ -110,6 +110,13 @@
                             <span>Statistik Reviewer</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.jadwal*') ? 'active' : '' }}" 
+                        href="{{ route('admin.jadwal.index') }}">
+                            <i class="bi bi-calendar-event"></i>
+                            <span>Jadwal Sidang & Ujian</span>
+                        </a>
+                    </li>
                 @elseif($userRole == 'reviewer')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('reviewer.dashboard') ? 'active' : '' }}" 

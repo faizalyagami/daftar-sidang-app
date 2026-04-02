@@ -60,4 +60,9 @@ class PendaftaranMetodologi extends Model
     public function academicPeriod() {
         return $this->belongsTo(AcademicPeriod::class);
     }
+
+    public function jadwal()
+    {
+        return $this->hasOne(JadwalMetodologi::class, 'pendaftaran_id');
+    }
 }

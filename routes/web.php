@@ -6,6 +6,7 @@ use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ReviewerController;
 use App\Http\Controllers\Admin\AcademicPeriodController;
+use App\Http\Controllers\Admin\JadwalController;
 
 // Guest routes
 Route::get('/', function () {
@@ -55,6 +56,23 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/users/{id}/reset-password', [AdminController::class, 'resetPassword'])->name('users.reset-password');
     Route::get('/reviewers/stats', [AdminController::class, 'reviewerStats'])->name('reviewers.stats');
     Route::get('/mahasiswa/{id}/periods', [AdminController::class, 'getMahasiswaPeriods'])->name('admin.mahasiswa.periods');
+
+    Route::prefix('jadwal')->name('jadwal.')->group(function () {
+    Route::get('/', [JadwalController::class, 'index'])->name('index');
+
+    Route::get('/skripsi/create/{id}', [JadwalController::class, 'createSkripsi'])->name('skripsi.create');
+    Route::post('/skripsi/store/{id}', [JadwalController::class, 'storeSkripsi'])->name('skripsi.store');
+    Route::get('/skripsi/edit/{id}', [JadwalController::class, 'editSkripsi'])->name('skripsi.edit');
+    Route::put('/skripsi/update/{id}', [JadwalController::class, 'updateSkripsi'])->name('skripsi.update');
+    Route::delete('/skripsi/destroy/{id}', [JadwalController::class, 'destroySkripsi'])->name('skripsi.destroy');
+
+    Route::get('/metodologi/create/{id}', [JadwalController::class, 'createMetodologi'])->name('metodologi.create');
+    Route::post('/metodologi/store/{id}', [JadwalController::class, 'storeMetodologi'])->name('metodologi.store');
+    Route::get('/metodologi/edit/{id}', [JadwalController::class, 'editMetodologi'])->name('metodologi.edit');
+    Route::put('/metodologi/update/{id}', [JadwalController::class, 'updateMetodologi'])->name('metodologi.update');
+    Route::delete('/metodologi/destroy/{id}', [JadwalController::class, 'destroyMetodologi'])->name('metodologi.destroy');
+  
+});
 });
 
 // Reviewer routes

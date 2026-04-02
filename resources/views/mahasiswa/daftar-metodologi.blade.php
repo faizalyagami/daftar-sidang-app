@@ -71,15 +71,13 @@
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Nama Lengkap</label>
-                            <input type="text" class="form-control"
-                                value="{{ Auth::user()->name }}" readonly disabled>
+                            <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly disabled>
                             <small class="text-muted">Data diambil dari SIAKAD</small>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label">NPM</label>
-                            <input type="text" class="form-control"
-                                value="{{ $mahasiswa->npm }}" readonly disabled>
+                            <input type="text" class="form-control" value="{{ $mahasiswa->npm }}" readonly disabled>
                             <small class="text-muted">Data diambil dari SIAKAD</small>
                         </div>
 
@@ -101,21 +99,38 @@
                             @enderror
                         </div>
 
+                        <!-- Dosen Pembimbing 1 (dropdown searchable) -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Dosen Pembimbing 1 <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('dosen_pembimbing') is-invalid @enderror"
-                                name="dosen_pembimbing" value="{{ old('dosen_pembimbing') }}" required
-                                placeholder="Contoh: Dr. Ahmad Rizal, M.Si">
+                            <select class="form-select select2-dosen @error('dosen_pembimbing') is-invalid @enderror"
+                                    name="dosen_pembimbing"
+                                    style="width: 100%;"
+                                    required>
+                                <option value="">-- Cari Dosen Pembimbing 1 --</option>
+                                @foreach($dosens as $dosen)
+                                    <option value="{{ $dosen->name }}" {{ old('dosen_pembimbing') == $dosen->name ? 'selected' : '' }}>
+                                        {{ $dosen->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                             @error('dosen_pembimbing')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
+                        <!-- Dosen Pembimbing 2 (dropdown searchable) -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Dosen Pembimbing 2 (Jika Ada)</label>
-                            <input type="text" class="form-control @error('dosen_pembimbing_2') is-invalid @enderror"
-                                name="dosen_pembimbing_2" value="{{ old('dosen_pembimbing_2') }}"
-                                placeholder="Contoh: Dr. Siti Fatimah, M.Psi">
+                            <select class="form-select select2-dosen @error('dosen_pembimbing_2') is-invalid @enderror"
+                                    name="dosen_pembimbing_2"
+                                    style="width: 100%;">
+                                <option value="">-- Cari Dosen Pembimbing 2 --</option>
+                                @foreach($dosens as $dosen)
+                                    <option value="{{ $dosen->name }}" {{ old('dosen_pembimbing_2') == $dosen->name ? 'selected' : '' }}>
+                                        {{ $dosen->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                             @error('dosen_pembimbing_2')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -219,6 +234,20 @@
         if (emailInput && userEmail && !emailInput.value) {
             emailInput.value = userEmail;
         }
+    });
+
+    // Inisialisasi Select2
+    $(document).ready(function() {
+        $('.select2-dosen').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Ketik nama dosen...',
+            allowClear: true,
+            language: {
+                noResults: function() { return 'Dosen tidak ditemukan. Hubungi admin.'; },
+                searching: function() { return 'Mencari...'; }
+            }
+        });
     });
 </script>
 @endpush

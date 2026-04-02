@@ -73,4 +73,9 @@ class PendaftaranSkripsi extends Model
     {
         return $this->belongsTo(AcademicPeriod::class);
     }
+
+    public function jadwal()
+{
+    return $this->hasOne(JadwalSkripsi::class, 'pendaftaran_id');
+}
 }

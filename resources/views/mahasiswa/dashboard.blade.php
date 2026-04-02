@@ -151,6 +151,93 @@
         </div>
     </div>
 
+    <div class="row mb-4">
+    @if($jadwalSkripsi)
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header-custom">
+                <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Jadwal Sidang Skripsi</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <strong>Hari & Tanggal</strong><br>
+                        {{ \Carbon\Carbon::parse($jadwalSkripsi->tanggal)->translatedFormat('l, d F Y') }}
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>Waktu</strong><br>
+                        {{ \Carbon\Carbon::parse($jadwalSkripsi->waktu_mulai)->format('H:i') }} - 
+                        {{ \Carbon\Carbon::parse($jadwalSkripsi->waktu_selesai)->format('H:i') }} WIB
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>Ruang</strong><br>
+                        {{ $jadwalSkripsi->ruang ?? 'Belum ditentukan' }}
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>Dosen Penguji</strong><br>
+                        @php
+                            $penguji = [];
+                            if($jadwalSkripsi->dosen_penguji_1) $penguji[] = $jadwalSkripsi->dosen_penguji_1;
+                            if($jadwalSkripsi->dosen_penguji_2) $penguji[] = $jadwalSkripsi->dosen_penguji_2;
+                            if($jadwalSkripsi->dosen_penguji_3) $penguji[] = $jadwalSkripsi->dosen_penguji_3;
+                        @endphp
+                        {{ implode(', ', $penguji) ?: 'Belum ditentukan' }}
+                    </div>
+                        @if($jadwalSkripsi->keterangan)
+                        <div class="col-12 mt-2">
+                            <strong>Keterangan</strong><br>
+                            {{ $jadwalSkripsi->keterangan }}
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if($jadwalMetodologi)
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header-custom">
+                    <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Jadwal Ujian Metodologi</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <strong>Hari & Tanggal</strong><br>
+                            {{ \Carbon\Carbon::parse($jadwalMetodologi->tanggal)->translatedFormat('l, d F Y') }}
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>Waktu</strong><br>
+                            {{ \Carbon\Carbon::parse($jadwalMetodologi->waktu_mulai)->format('H:i') }} - 
+                            {{ \Carbon\Carbon::parse($jadwalMetodologi->waktu_selesai)->format('H:i') }} WIB
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>Ruang</strong><br>
+                            {{ $jadwalMetodologi->ruang ?? 'Belum ditentukan' }}
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>Dosen Penguji</strong><br>
+                            @php
+                                $penguji = [];
+                                if($jadwalMetodologi->dosen_penguji_1) $penguji[] = $jadwalMetodologi->dosen_penguji_1;
+                                if($jadwalMetodologi->dosen_penguji_2) $penguji[] = $jadwalMetodologi->dosen_penguji_2;
+                            @endphp
+                            {{ implode(', ', $penguji) ?: 'Belum ditentukan' }}
+                        </div>
+                        @if($jadwalMetodologi->keterangan)
+                        <div class="col-12 mt-2">
+                            <strong>Keterangan</strong><br>
+                            {{ $jadwalMetodologi->keterangan }}
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+
     <!-- Riwayat Pendaftaran -->
     <div class="row mb-4">
         <div class="col-md-6">
