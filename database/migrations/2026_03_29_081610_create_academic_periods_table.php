@@ -10,11 +10,13 @@ return new class extends Migration
     {
         Schema::create('academic_periods', function (Blueprint $table) {
             $table->id();
-            $table->string('semester'); // Ganjil, Genap
-            $table->string('tahun_akademik'); // 2024/2025, 2025/2026
+            $table->string('semester');
+            $table->string('tahun_akademik');
             $table->date('start_date');
             $table->date('end_date');
             $table->boolean('is_active')->default(false);
+            $table->boolean('skripsi_open')->default(true);
+            $table->boolean('metodologi_open')->default(true);
             $table->text('description')->nullable();
             $table->timestamps();
         });

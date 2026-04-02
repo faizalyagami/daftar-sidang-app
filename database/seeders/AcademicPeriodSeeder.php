@@ -23,7 +23,7 @@ class AcademicPeriodSeeder extends Seeder
                 'tahun_akademik' => '2024/2025',
                 'start_date' => '2025-01-01',
                 'end_date' => '2025-06-30',
-                'is_active' => true,
+                'is_active' => false,
                 'description' => 'Periode Genap Tahun Akademik 2024/2025'
             ],
             [
@@ -33,6 +33,14 @@ class AcademicPeriodSeeder extends Seeder
                 'end_date' => '2025-12-31',
                 'is_active' => false,
                 'description' => 'Periode Ganjil Tahun Akademik 2025/2026'
+            ],
+            [
+                'semester' => 'Genap',
+                'tahun_akademik' => '2025/2026',
+                'start_date' => '2026-02-08',
+                'end_date' => '2026-06-19',
+                'is_active' => true,
+                'description' => 'Periode Genap Tahun Akademik 2025/2026'
             ],
         ];
 

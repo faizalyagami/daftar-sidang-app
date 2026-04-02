@@ -15,13 +15,17 @@ class AcademicPeriod extends Model
         'start_date',
         'end_date',
         'is_active',
+        'skripsi_open',
+        'metodologi_open',
         'description'
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'skripsi_open' => 'boolean',
+        'metodologi_open' => 'boolean'
     ];
 
     // Get active period
@@ -44,5 +48,15 @@ class AcademicPeriod extends Model
     public static function getCurrentPeriod()
     {
         return self::getActive();
+    }
+
+    public function isSkripsiRegistrationOpen()
+    {
+        return $this->is_active && $this->skripsi_open;
+    }
+
+    public function isMetodologiRegistrationOpen()
+    {
+        return $this->is_active && $this->metodoligi_open;
     }
 }

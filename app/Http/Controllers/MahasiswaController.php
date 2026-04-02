@@ -20,17 +20,17 @@ class MahasiswaController extends Controller
             if (!Auth::check()) {
                 return redirect()->route('login');
             }
-            
+
             $userRole = Auth::user()->role ? Auth::user()->role->role : null;
-            
+
             if ($userRole !== 'mahasiswa') {
                 abort(403, 'Unauthorized access. Anda tidak memiliki akses sebagai mahasiswa.');
             }
-            
+
             return $next($request);
         });
     }
-    
+
     public function dashboard()
     {
         $mahasiswa = Auth::user()->mahasiswa;
@@ -54,10 +54,19 @@ class MahasiswaController extends Controller
             'metodologiPeriods'
         ));
     }
-    
+
     public function daftarSkripsi()
     {
         $activePeriod = AcademicPeriod::getActive();
+        if (!$activePeriod) {
+            return redirect()->route('mahasiswa.dashboard')
+                ->with('error', 'Tidak ada periode aktif. Silakan hubungi admin.');
+        }
+
+        if (!$activePeriod->isSkripsiRegistrationOpen()) {
+            return redirect()->route('mahasiswa.dashboard')
+                ->with('error', 'Pendaftaran sidang skripsi sedang ditutup untuk periode ini.');
+        }
         return view('mahasiswa.daftar-skripsi', compact('activePeriod'));
     }
 
@@ -81,12 +90,12 @@ class MahasiswaController extends Controller
                 'surat_lolos_turnitin' => 'required|file|mimes:pdf|max:2048',
                 'sertifikat_toefl' => 'required|file|mimes:pdf|max:2048',
                 'pas_foto' => 'required|file|mimes:jpg,jpeg,png|max:2048',
-                'buku_bimbingan' => 'required|file|mimes:pdf|max:2048', 
+                'buku_bimbingan' => 'required|file|mimes:pdf|max:2048',
                 'surat_perbaikan' => 'required|file|mimes:pdf|max:2048',
                 'surat_ijin_sidang' => 'required|file|mimes:pdf|max:2048',
                 'berkas_skripsi' => 'required|file|mimes:pdf|max:10240',
             ]);
-            
+
             $activePeriod = AcademicPeriod::getActive();
             if (!$activePeriod) {
                 return redirect()->back()->with('error', 'Pendaftaran Sidang Skripsi sedang ditutup.');
@@ -132,7 +141,7 @@ class MahasiswaController extends Controller
                 if ($request->hasFile($dokumenType)) {
                     $file = $request->file($dokumenType);
                     $path = $file->store("dokumen/skripsi/{$pendaftaran->id}/{$dokumenType}", 'public');
-                    
+
                     DokumenSkripsi::create([
                         'pendaftaran_id' => $pendaftaran->id,
                         'jenis_dokumen' => $dokumenType,
@@ -142,7 +151,6 @@ class MahasiswaController extends Controller
             }
 
             return redirect()->route('mahasiswa.dashboard')->with('success', 'Pendaftaran skripsi berhasil dikirim');
-
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
@@ -150,8 +158,19 @@ class MahasiswaController extends Controller
 
     public function daftarMetodologi()
     {
-        $mahasiswa = Auth::user()->mahasiswa;
-        return view('mahasiswa.daftar-metodologi', compact('mahasiswa'));
+        $activePeriod = AcademicPeriod::getActive();
+
+        if (!$activePeriod) {
+            return redirect()->route('mahasiswa.dashboard')
+                ->with('error', 'Tidak ada periode aktif. Silakan hubungi admin.');
+        }
+
+        if (!$activePeriod->isMetodologiRegistrationOpen()) {
+            return redirect()->route('mahasiswa.dashboard')
+                ->with('error', 'Pendaftaran ujian metodologi sedang ditutup untuk periode ini.');
+        }
+
+        return view('mahasiswa.daftar-metodologi', compact('activePeriod'));
     }
 
     public function storeMetodologi(Request $request)
@@ -175,7 +194,7 @@ class MahasiswaController extends Controller
         }
 
         $mahasiswa = Auth::user()->mahasiswa;
-        
+
         // Update no_hp if provided
         if ($request->no_hp) {
             $mahasiswa->update(['no_hp' => $request->no_hp]);
@@ -210,7 +229,7 @@ class MahasiswaController extends Controller
                     $fileName,
                     'public'
                 );
-                
+
                 DokumenMetodologi::create([
                     'pendaftaran_id' => $pendaftaran->id,
                     'jenis_dokumen' => $field,
@@ -225,22 +244,22 @@ class MahasiswaController extends Controller
     public function showSkripsi($id)
     {
         $pendaftaran = PendaftaranSkripsi::with(['mahasiswa', 'dokumen'])->findOrFail($id);
-        
+
         if ($pendaftaran->mahasiswa_id != Auth::user()->mahasiswa->id) {
             abort(403);
         }
-        
+
         return view('mahasiswa.show-skripsi', compact('pendaftaran'));
     }
 
     public function showMetodologi($id)
     {
         $pendaftaran = PendaftaranMetodologi::with(['mahasiswa.user', 'dokumen'])->findOrFail($id);
-        
+
         if ($pendaftaran->mahasiswa_id != Auth::user()->mahasiswa->id) {
             abort(403);
         }
-        
+
         return view('mahasiswa.show-metodologi', compact('pendaftaran'));
     }
 }

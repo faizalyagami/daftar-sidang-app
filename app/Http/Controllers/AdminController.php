@@ -436,4 +436,44 @@ class AdminController extends Controller
 
         return response()->json($periods);
     }
+
+    public function edit($id)
+    {
+        $period = AcademicPeriod::findOrFail($id);
+        return view('admin.academic-periods.edit', compact('period'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'semester' => 'required|in:Ganjil,Genap',
+            'tahun_akademik' => 'required|string|regex:/^\d{4}\/\d{4}$/',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'skripsi_open' => 'boolean',
+            'metodologi_open' => 'boolean',
+            'is_active' => 'boolean',
+            'description' => 'nullable|string'
+        ]);
+
+        $period = AcademicPeriod::findOrFail($id);
+
+        if ($request->is_active) {
+            AcademicPeriod::where('id', '!=', $id)->update(['is_active' => false]);
+        }
+
+        $period->update([
+            'semester' => $request->semester,
+            'tahun_akademik' => $request->tahun_akademik,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'is_active' => $request->is_active ? true : false,
+            'skripsi_open' => $request->skripsi_open ? true : false,
+            'metodologi_open' => $request->metodologi_open ? true : false,
+            'description' => $request->description
+        ]);
+
+        return redirect()->route('admin.academic-periods.index')
+            ->with('success', 'Periode akademik berhasil diupdate');
+    }
 }
