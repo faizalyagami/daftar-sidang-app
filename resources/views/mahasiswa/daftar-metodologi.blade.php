@@ -3,6 +3,75 @@
 @section('title', 'Daftar Ujian Metodologi Penelitian')
 
 @section('content')
+<style>
+    .form-section {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-section h5 {
+        color: #667eea;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .required-field::after {
+        content: '*';
+        color: red;
+        margin-left: 4px;
+    }
+
+    .file-info {
+        font-size: 11px;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+
+    .file-info i {
+        margin-right: 3px;
+    }
+
+    .upload-area {
+        border: 2px dashed #e0e0e0;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s;
+        cursor: pointer;
+        background: #f8f9fa;
+    }
+
+    .upload-area:hover {
+        border-color: #667eea;
+        background: #f0f4ff;
+    }
+
+    .upload-area i {
+        font-size: 24px;
+        color: #667eea;
+        margin-bottom: 5px;
+    }
+
+    .period-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 10px;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .period-badge i {
+        font-size: 16px;
+    }
+</style>
+
 <div class="row justify-content-center">
     <div class="col-md-10">
         <!-- Header -->
@@ -58,98 +127,103 @@
             <div class="card-body p-4">
                 <form action="{{ route('mahasiswa.store-metodologi') }}" method="POST" enctype="multipart/form-data">
                     @csrf
+                    <div class="form-section">
+                        <h5>
+                            <i class="bi bi-info-circle me-2"></i>
+                            Data Pendaftaran
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                    name="email" value="{{ old('email', Auth::user()->email) }}" required>
+                                @error('email')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Email Address <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control @error('email') is-invalid @enderror"
-                                name="email" value="{{ old('email', Auth::user()->email) }}" required>
-                            @error('email')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nama Lengkap</label>
+                                <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly disabled>
+                                <small class="text-muted">Data diambil dari SIAKAD</small>
+                            </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Nama Lengkap</label>
-                            <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly disabled>
-                            <small class="text-muted">Data diambil dari SIAKAD</small>
-                        </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">NPM</label>
+                                <input type="text" class="form-control" value="{{ $mahasiswa->npm ?? '-' }}" readonly disabled>
+                                <small class="text-muted">Data diambil dari SIAKAD</small>
+                            </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">NPM</label>
-                            <input type="text" class="form-control" value="{{ $mahasiswa->npm }}" readonly disabled>
-                            <small class="text-muted">Data diambil dari SIAKAD</small>
-                        </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">No Handphone <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control @error('no_hp') is-invalid @enderror"
+                                    name="no_hp" value="{{ old('no_hp', $mahasiswa->no_hp ?? '') }}" required>
+                                @error('no_hp')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">No Handphone <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('no_hp') is-invalid @enderror"
-                                name="no_hp" value="{{ old('no_hp', $mahasiswa->no_hp) }}" required>
-                            @error('no_hp')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Judul Penelitian <span class="text-danger">*</span></label>
+                                <textarea class="form-control @error('judul_penelitian') is-invalid @enderror"
+                                    name="judul_penelitian" rows="3" required>{{ old('judul_penelitian') }}</textarea>
+                                @error('judul_penelitian')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label">Judul Penelitian <span class="text-danger">*</span></label>
-                            <textarea class="form-control @error('judul_penelitian') is-invalid @enderror"
-                                name="judul_penelitian" rows="3" required>{{ old('judul_penelitian') }}</textarea>
-                            @error('judul_penelitian')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <!-- Dosen Pembimbing 1 (dropdown searchable) -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Dosen Pembimbing 1 <span class="text-danger">*</span></label>
-                            <select class="form-select select2-dosen @error('dosen_pembimbing') is-invalid @enderror"
+                            <!-- Dosen Pembimbing 1 (dropdown searchable) -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Dosen Pembimbing 1 <span class="text-danger">*</span></label>
+                                <select class="form-select select2-dosen @error('dosen_pembimbing') is-invalid @enderror"
                                     name="dosen_pembimbing"
                                     style="width: 100%;"
                                     required>
-                                <option value="">-- Cari Dosen Pembimbing 1 --</option>
-                                @foreach($dosens as $dosen)
+                                    <option value="">-- Cari Dosen Pembimbing 1 --</option>
+                                    @foreach($dosens as $dosen)
                                     <option value="{{ $dosen->name }}" {{ old('dosen_pembimbing') == $dosen->name ? 'selected' : '' }}>
                                         {{ $dosen->name }}
                                     </option>
-                                @endforeach
-                            </select>
-                            @error('dosen_pembimbing')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                                    @endforeach
+                                </select>
+                                @error('dosen_pembimbing')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                        <!-- Dosen Pembimbing 2 (dropdown searchable) -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Dosen Pembimbing 2 (Jika Ada)</label>
-                            <select class="form-select select2-dosen @error('dosen_pembimbing_2') is-invalid @enderror"
+                            <!-- Dosen Pembimbing 2 (dropdown searchable) -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Dosen Pembimbing 2 (Jika Ada)</label>
+                                <select class="form-select select2-dosen @error('dosen_pembimbing_2') is-invalid @enderror"
                                     name="dosen_pembimbing_2"
                                     style="width: 100%;">
-                                <option value="">-- Cari Dosen Pembimbing 2 --</option>
-                                @foreach($dosens as $dosen)
+                                    <option value="">-- Cari Dosen Pembimbing 2 --</option>
+                                    @foreach($dosens as $dosen)
                                     <option value="{{ $dosen->name }}" {{ old('dosen_pembimbing_2') == $dosen->name ? 'selected' : '' }}>
                                         {{ $dosen->name }}
                                     </option>
-                                @endforeach
-                            </select>
-                            @error('dosen_pembimbing_2')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                                    @endforeach
+                                </select>
+                                @error('dosen_pembimbing_2')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label">Kuliah Peminatan <span class="text-danger">*</span></label>
-                            <select class="form-select @error('kuliah_peminatan') is-invalid @enderror"
-                                name="kuliah_peminatan" required>
-                                <option value="">Pilih Peminatan</option>
-                                <option value="Psikologi Klinis" {{ old('kuliah_peminatan') == 'Psikologi Klinis' ? 'selected' : '' }}>Psikologi Klinis</option>
-                                <option value="Psikologi Pendidikan" {{ old('kuliah_peminatan') == 'Psikologi Pendidikan' ? 'selected' : '' }}>Psikologi Pendidikan</option>
-                                <option value="Psikologi Industri dan Organisasi" {{ old('kuliah_peminatan') == 'Psikologi Industri dan Organisasi' ? 'selected' : '' }}>Psikologi Industri dan Organisasi</option>
-                                <option value="Psikologi Sosial" {{ old('kuliah_peminatan') == 'Psikologi Sosial' ? 'selected' : '' }}>Psikologi Sosial</option>
-                                <option value="Psikologi Perkembangan" {{ old('kuliah_peminatan') == 'Psikologi Perkembangan' ? 'selected' : '' }}>Psikologi Perkembangan</option>
-                            </select>
-                            @error('kuliah_peminatan')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Kuliah Peminatan <span class="text-danger">*</span></label>
+                                <select class="form-select @error('kuliah_peminatan') is-invalid @enderror"
+                                    name="kuliah_peminatan" required>
+                                    <option value="">Pilih Peminatan</option>
+                                    <option value="Psikologi Klinis" {{ old('kuliah_peminatan') == 'Psikologi Klinis' ? 'selected' : '' }}>Psikologi Klinis</option>
+                                    <option value="Psikologi Pendidikan" {{ old('kuliah_peminatan') == 'Psikologi Pendidikan' ? 'selected' : '' }}>Psikologi Pendidikan</option>
+                                    <option value="Psikologi Industri dan Organisasi" {{ old('kuliah_peminatan') == 'Psikologi Industri dan Organisasi' ? 'selected' : '' }}>Psikologi Industri dan Organisasi</option>
+                                    <option value="Psikologi Sosial" {{ old('kuliah_peminatan') == 'Psikologi Sosial' ? 'selected' : '' }}>Psikologi Sosial</option>
+                                    <option value="Psikologi Perkembangan" {{ old('kuliah_peminatan') == 'Psikologi Perkembangan' ? 'selected' : '' }}>Psikologi Perkembangan</option>
+                                </select>
+                                @error('kuliah_peminatan')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
                     </div>
 
@@ -244,8 +318,12 @@
             placeholder: 'Ketik nama dosen...',
             allowClear: true,
             language: {
-                noResults: function() { return 'Dosen tidak ditemukan. Hubungi admin.'; },
-                searching: function() { return 'Mencari...'; }
+                noResults: function() {
+                    return 'Dosen tidak ditemukan. Hubungi admin.';
+                },
+                searching: function() {
+                    return 'Mencari...';
+                }
             }
         });
     });

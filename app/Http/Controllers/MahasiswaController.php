@@ -35,32 +35,32 @@ class MahasiswaController extends Controller
     public function dashboard()
     {
         $mahasiswa = Auth::user()->mahasiswa;
-        
+
         // Pendaftaran
         $pendaftaranSkripsi = $mahasiswa->pendaftaranSkripsi()->latest()->get();
         $pendaftaranMetodologi = $mahasiswa->pendaftaranMetodologi()->latest()->get();
-        
+
         // Durasi
         $skripsiDuration = $mahasiswa->getSkripsiDuration();
         $metodologiDuration = $mahasiswa->getMetodologiDuration();
-        
+
         // Riwayat periode
         $skripsiPeriods = $mahasiswa->getSkripsiPeriods();
         $metodologiPeriods = $mahasiswa->getMetodologiPeriods();
-        
+
         // --- Ambil jadwal untuk pendaftaran yang sudah approved ---
         $jadwalSkripsi = null;
         $skripsiApproved = $pendaftaranSkripsi->where('status', 'approved')->first();
         if ($skripsiApproved && $skripsiApproved->jadwal) {
             $jadwalSkripsi = $skripsiApproved->jadwal;
         }
-        
+
         $jadwalMetodologi = null;
         $metodologiApproved = $pendaftaranMetodologi->where('status', 'approved')->first();
         if ($metodologiApproved && $metodologiApproved->jadwal) {
             $jadwalMetodologi = $metodologiApproved->jadwal;
         }
-        
+
         return view('mahasiswa.dashboard', compact(
             'pendaftaranSkripsi',
             'pendaftaranMetodologi',
@@ -74,7 +74,8 @@ class MahasiswaController extends Controller
     }
 
     public function daftarSkripsi()
-    {   
+    {
+        $mahasiswa = Auth::user()->mahasiswa;
         $dosens = Dosen::active()->orderBy('name')->get();
         $activePeriod = AcademicPeriod::getActive();
         if (!$activePeriod) {
@@ -86,7 +87,7 @@ class MahasiswaController extends Controller
             return redirect()->route('mahasiswa.dashboard')
                 ->with('error', 'Pendaftaran sidang skripsi sedang ditutup untuk periode ini.');
         }
-        return view('mahasiswa.daftar-skripsi', compact('activePeriod', 'dosens'));
+        return view('mahasiswa.daftar-skripsi', compact('activePeriod', 'mahasiswa', 'dosens'));
     }
 
     public function storeSkripsi(Request $request)
@@ -189,7 +190,11 @@ class MahasiswaController extends Controller
                 ->with('error', 'Pendaftaran ujian metodologi sedang ditutup untuk periode ini.');
         }
 
-        return view('mahasiswa.daftar-metodologi', compact('activePeriod'));
+        $mahasiswa = Auth::user()->mahasiswa;
+
+        $dosens = Dosen::where('is_active', true)->orderBy('name')->get();
+
+        return view('mahasiswa.daftar-metodologi', compact('activePeriod', 'mahasiswa', 'dosens'));
     }
 
     public function storeMetodologi(Request $request)

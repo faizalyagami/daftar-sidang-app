@@ -46,7 +46,7 @@
                                 <th>Start Date</th>
                                 <th>End Date</th>
                                 <th>Status Periode</th>
-                                <th>Status Pendaftaran</th> {{-- KOLOM BARU --}}
+                                <th>Status Pendaftaran</th>
                                 <th>Aksi</th>
                             </thead>
                             <tbody>
@@ -73,9 +73,9 @@
                                         @endif
                                         <br>
                                         @if($period->isMetodologiRegistrationOpen())
-                                        <span class="badge bg-success mt-1">Metodologi: Buka</span>
+                                        <span class="badge bg-success mt-1">Metodologi Penelitian: Buka</span>
                                         @else
-                                        <span class="badge bg-danger mt-1">Metodologi: Tutup</span>
+                                        <span class="badge bg-danger mt-1">Metodologi Penelitian: Tutup</span>
                                         @endif
                                     </td>
                                     <td>

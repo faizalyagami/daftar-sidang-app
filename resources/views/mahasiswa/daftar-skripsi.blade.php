@@ -137,6 +137,35 @@
                             </h5>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
+                                    <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                        name="email" value="{{ old('email', Auth::user()->email) }}" required>
+                                    @error('email')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nama Lengkap</label>
+                                    <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly disabled>
+                                    <small class="text-muted">Data diambil dari SIAKAD</small>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">NPM</label>
+                                    <input type="text" class="form-control" value="{{ $mahasiswa->npm ?? '-' }}" readonly disabled>
+                                    <small class="text-muted">Data diambil dari SIAKAD</small>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">No Handphone <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('no_hp') is-invalid @enderror"
+                                        name="no_hp" value="{{ old('no_hp', $mahasiswa->no_hp ?? '') }}" required>
+                                    @error('no_hp')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6 mb-3">
                                     <label class="form-label fw-semibold required-field">
                                         Judul Skripsi
                                     </label>
@@ -157,14 +186,14 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-semibold required-field">Dosen Pembimbing 1</label>
                                     <select class="form-select select2-dosen @error('dosen_pembimbing') is-invalid @enderror"
-                                            name="dosen_pembimbing"
-                                            style="width: 100%;"
-                                            required>
+                                        name="dosen_pembimbing"
+                                        style="width: 100%;"
+                                        required>
                                         <option value="">-- Cari Dosen Pembimbing --</option>
                                         @foreach($dosens as $dosen)
-                                            <option value="{{ $dosen->name }}" {{ old('dosen_pembimbing') == $dosen->name ? 'selected' : '' }}>
-                                                {{ $dosen->name }}
-                                            </option>
+                                        <option value="{{ $dosen->name }}" {{ old('dosen_pembimbing') == $dosen->name ? 'selected' : '' }}>
+                                            {{ $dosen->name }}
+                                        </option>
                                         @endforeach
                                     </select>
                                     @error('dosen_pembimbing')
@@ -175,13 +204,13 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-semibold">Dosen Pembimbing 2</label>
                                     <select class="form-select select2-dosen @error('dosen_pembimbing_2') is-invalid @enderror"
-                                            name="dosen_pembimbing_2"
-                                            style="width: 100%;">
+                                        name="dosen_pembimbing_2"
+                                        style="width: 100%;">
                                         <option value="">-- Cari Dosen Pembimbing 2--</option>
                                         @foreach($dosens as $dosen)
-                                            <option value="{{ $dosen->name }}" {{ old('dosen_pembimbing_2') == $dosen->name ? 'selected' : '' }}>
-                                                {{ $dosen->name }}
-                                            </option>
+                                        <option value="{{ $dosen->name }}" {{ old('dosen_pembimbing_2') == $dosen->name ? 'selected' : '' }}>
+                                            {{ $dosen->name }}
+                                        </option>
                                         @endforeach
                                     </select>
                                     @error('dosen_pembimbing_2')
@@ -193,13 +222,13 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-semibold">Narasumber Seminar Skripsi</label>
                                     <select class="form-select select2-dosen @error('narasumber') is-invalid @enderror"
-                                            name="narasumber"
-                                            style="width: 100%;">
+                                        name="narasumber"
+                                        style="width: 100%;">
                                         <option value="">-- Cari Narasumber --</option>
                                         @foreach($dosens as $dosen)
-                                            <option value="{{ $dosen->name }}" {{ old('narasumber') == $dosen->name ? 'selected' : '' }}>
-                                                {{ $dosen->name }}
-                                            </option>
+                                        <option value="{{ $dosen->name }}" {{ old('narasumber') == $dosen->name ? 'selected' : '' }}>
+                                            {{ $dosen->name }}
+                                        </option>
                                         @endforeach
                                     </select>
                                     @error('narasumber')
@@ -223,7 +252,7 @@
                         </div>
 
                         <!-- Dokumen Persyaratan-->
-                            <div class="form-section">
+                        <div class="form-section">
                             <h5>
                                 <i class="bi bi-file-earmark-text me-2"></i>
                                 Dokumen Persyaratan
@@ -673,35 +702,35 @@
                                 </div>
                             </div>
                         </div>
-                        </div>
-
-                        <!-- Pernyataan -->
-                        <div class="form-section">
-                            <div class="alert alert-warning">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="persetujuan" required>
-                                    <label class="form-check-label" for="persetujuan">
-                                        <strong>Pernyataan:</strong> Dengan ini saya menyatakan bahwa dokumen pendaftaran SIDANG SKRIPSI yang saya ajukan adalah ASLI dan SUDAH MENDAPAT PERSETUJUAN DOSEN PEMBIMBING SKRIPSI. Apabila di kemudian hari ditemukan dokumen yang saya ajukan palsu atau tanpa seizin dosen pembimbing, SAYA BERSEDIA MENERIMA KONSEKUENSI yang ditentukan Fakultas Psikologi Universitas Islam Bandung.
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tombol Aksi -->
-                        <div class="d-flex justify-content-between gap-3 mt-4">
-                            <a href="{{ route('mahasiswa.dashboard') }}" class="btn btn-secondary px-4">
-                                <i class="bi bi-arrow-left"></i> Kembali
-                            </a>
-                            <button type="submit" class="btn btn-primary px-5" id="submitBtn">
-                                <i class="bi bi-send"></i> Submit Pendaftaran
-                            </button>
-                        </div>
-                    </form>
                 </div>
+
+                <!-- Pernyataan -->
+                <div class="form-section">
+                    <div class="alert alert-warning">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="persetujuan" required>
+                            <label class="form-check-label" for="persetujuan">
+                                <strong>Pernyataan:</strong> Dengan ini saya menyatakan bahwa dokumen pendaftaran SIDANG SKRIPSI yang saya ajukan adalah ASLI dan SUDAH MENDAPAT PERSETUJUAN DOSEN PEMBIMBING SKRIPSI. Apabila di kemudian hari ditemukan dokumen yang saya ajukan palsu atau tanpa seizin dosen pembimbing, SAYA BERSEDIA MENERIMA KONSEKUENSI yang ditentukan Fakultas Psikologi Universitas Islam Bandung.
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tombol Aksi -->
+                <div class="d-flex justify-content-between gap-3 mt-4">
+                    <a href="{{ route('mahasiswa.dashboard') }}" class="btn btn-secondary px-4">
+                        <i class="bi bi-arrow-left"></i> Kembali
+                    </a>
+                    <button type="submit" class="btn btn-primary px-5" id="submitBtn">
+                        <i class="bi bi-send"></i> Submit Pendaftaran
+                    </button>
+                </div>
+                </form>
             </div>
-            @endif
         </div>
+        @endif
     </div>
+</div>
 </div>
 @endsection
 
@@ -737,8 +766,15 @@
 
     // Drag and drop
     document.querySelectorAll('.upload-area').forEach(area => {
-        area.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = '#667eea'; this.style.background = '#f0f4ff'; });
-        area.addEventListener('dragleave', function(e) { this.style.borderColor = '#e0e0e0'; this.style.background = '#f8f9fa'; });
+        area.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#667eea';
+            this.style.background = '#f0f4ff';
+        });
+        area.addEventListener('dragleave', function(e) {
+            this.style.borderColor = '#e0e0e0';
+            this.style.background = '#f8f9fa';
+        });
         area.addEventListener('drop', function(e) {
             e.preventDefault();
             this.style.borderColor = '#e0e0e0';
@@ -760,8 +796,12 @@
             placeholder: 'Ketik nama dosen...',
             allowClear: true,
             language: {
-                noResults: function() { return 'Dosen tidak ditemukan. Hubungi admin.'; },
-                searching: function() { return 'Mencari...'; }
+                noResults: function() {
+                    return 'Dosen tidak ditemukan. Hubungi admin.';
+                },
+                searching: function() {
+                    return 'Mencari...';
+                }
             }
         });
     });

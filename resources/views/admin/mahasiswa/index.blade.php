@@ -226,6 +226,7 @@
                                 <div class="d-flex gap-1">
                                     @foreach($riwayatSkripsi as $period)
                                     <span class="badge bg-primary period-badge" title="{{ $period }}">{{ $loop->iteration }}</span>
+                                    <span class="badge bg-primary period-badge">{{ $period }}</span>
                                     @endforeach
                                 </div>
                                 <i class="bi bi-info-circle info-icon" onclick="showPeriods('skripsi', {{ $mahasiswa->id }})"></i>

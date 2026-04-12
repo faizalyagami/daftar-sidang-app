@@ -57,6 +57,6 @@ class AcademicPeriod extends Model
 
     public function isMetodologiRegistrationOpen()
     {
-        return $this->is_active && $this->metodoligi_open;
+        return $this->is_active && $this->metodologi_open;
     }
 }

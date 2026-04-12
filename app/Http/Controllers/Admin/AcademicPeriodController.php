@@ -29,7 +29,9 @@ class AcademicPeriodController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'description' => 'nullable|string',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'skripsi_open' => 'boolean',
+            'metodologi_open' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -37,11 +39,20 @@ class AcademicPeriodController extends Controller
         }
 
         // If this period is set as active, deactivate others
-        if ($request->is_active) {
+        if ($request->has('is_active')) {
             AcademicPeriod::where('is_active', true)->update(['is_active' => false]);
         }
 
-        AcademicPeriod::create($request->all());
+        AcademicPeriod::create([
+            'semester' => $request->semester,
+            'tahun_akademik' => $request->tahun_akademik,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'description' => $request->description,
+            'is_active' => $request->has('is_active') ? 1 : 0,
+            'skripsi_open' => $request->has('skripsi_open') ? 1 : 0,
+            'metodologi_open' => $request->has('metodologi_open') ? 1 : 0,
+        ]);
 
         return redirect()->route('admin.academic-periods.index')
             ->with('success', 'Periode akademik berhasil ditambahkan');
@@ -63,7 +74,9 @@ class AcademicPeriodController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'description' => 'nullable|string',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'skripsi_open' => 'boolean',
+            'metodologi_open' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -71,11 +84,20 @@ class AcademicPeriodController extends Controller
         }
 
         // If this period is set as active, deactivate others
-        if ($request->is_active) {
+        if ($request->has('is_active')) {
             AcademicPeriod::where('id', '!=', $id)->where('is_active', true)->update(['is_active' => false]);
         }
 
-        $period->update($request->all());
+        $period->update([
+            'semester' => $request->semester,
+            'tahun_akademik' => $request->tahun_akademik,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'description' => $request->description,
+            'is_active' => $request->has('is_active') ? 1 : 0,
+            'skripsi_open' => $request->has('skripsi_open') ? 1 : 0,
+            'metodologi_open' => $request->has('metodologi_open') ? 1 : 0,
+        ]);
 
         return redirect()->route('admin.academic-periods.index')
             ->with('success', 'Periode akademik berhasil diupdate');
@@ -97,7 +119,9 @@ class AcademicPeriodController extends Controller
         
         // Activate selected
         $period = AcademicPeriod::findOrFail($id);
-        $period->update(['is_active' => true]);
+        $period->update([
+            'is_active' => true,
+        ]);
 
         return redirect()->route('admin.academic-periods.index')
             ->with('success', 'Periode akademik aktif berhasil diubah');
