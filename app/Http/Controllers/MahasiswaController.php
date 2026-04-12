@@ -9,6 +9,8 @@ use App\Models\PendaftaranMetodologi;
 use App\Models\DokumenSkripsi;
 use App\Models\DokumenMetodologi;
 use App\Models\Dosen;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -137,6 +139,30 @@ class MahasiswaController extends Controller
                 'academic_period_id' => $activePeriod->id,
             ]);
 
+            Notification::createNotification(
+                $mahasiswa->user_id,
+                'pendaftaran',
+                'Pendaftaran Skripsi Berhasil',
+                'Pendaftaran sidang skripsi Anda telah dikirim dan menunggu review.',
+                route('mahasiswa.show-skripsi', $pendaftaran->id),
+                ['status' => 'pending', 'type' => 'skripsi']
+            );
+
+            $admins = User::whereHas('role', function ($q) {
+                $q->where('role', 'admin');
+            })->get();
+
+            foreach ($admins as $admin) {
+                Notification::createNotification(
+                    $admin->id,
+                    'pendaftaran',
+                    'Pendaftaran Skripsi Baru',
+                    "Mahasiswa {$mahasiswa->user->name} telah mendaftar sidang skripsi.",
+                    route('admin.pendaftaran.skripsi.show', $pendaftaran->id),
+                    ['npm' => $mahasiswa->npm, 'nama' => $mahasiswa->user->name]
+                );
+            }
+
             // Upload dokumen
             $dokumenTypes = [
                 'bukti_pembayaran_registrasi',
@@ -234,6 +260,32 @@ class MahasiswaController extends Controller
             'status' => 'pending',
             'academic_period_id' => $activePeriod->id,
         ]);
+
+        Notification::create([
+            'user_id' => $mahasiswa->user_id,
+            'type' => 'pendaftaran',
+            'title' => 'Pendaftaran Metodologi Berhasil',
+            'message' => 'Pendaftaran ujian metodologi Anda telah dikirim dan sedang menunggu review.',
+            'link' => route('mahasiswa.show-metodologi', $pendaftaran->id),
+            'data' => json_encode(['status' => 'pending', 'type' => 'metodologi']),
+            'is_read' => false
+        ]);
+
+        $admins = User::whereHas('role', function ($q) {
+            $q->where('role', 'admin');
+        })->get();
+
+        foreach ($admins as $admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'type' => 'pendaftaran',
+                'title' => 'Pendaftaran Metodologi Baru',
+                'message' => "Mahasiswa {$mahasiswa->user->name} ({$mahasiswa->npm}) telah mendaftar ujian metodologi.",
+                'link' => route('admin.pendaftaran.metodologi.show', $pendaftaran->id),
+                'data' => json_encode(['npm' => $mahasiswa->npm, 'nama' => $mahasiswa->user->name]),
+                'is_read' => false
+            ]);
+        }
 
         // Upload dokumen
         $dokumenTypes = [

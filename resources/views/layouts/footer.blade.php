@@ -70,6 +70,75 @@
             }
         });
     });
+
+    // ========== SCRIPT NOTIFIKASI ==========
+    // Mark all notifications as read
+    const markAllReadBtn = document.getElementById('markAllRead');
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            fetch('{{ route("notifications.mark-all-read") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => response.json())
+                .then(() => {
+                    location.reload();
+                }).catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+    }
+
+    // Mark single notification as read when clicked
+    document.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const id = this.dataset.id;
+            if (id) {
+                fetch(`/notifications/${id}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        });
+    });
+
+    // Update notification badge periodically
+    function updateNotificationBadge() {
+        fetch('/notifications/unread-count')
+            .then(response => response.json())
+            .then(data => {
+                const bellButton = document.querySelector('.btn-icon');
+                const existingBadge = document.querySelector('.notification-badge');
+
+                if (data.count > 0) {
+                    if (existingBadge) {
+                        existingBadge.textContent = data.count > 9 ? '9+' : data.count;
+                    } else if (bellButton) {
+                        const newBadge = document.createElement('span');
+                        newBadge.className = 'notification-badge';
+                        newBadge.textContent = data.count > 9 ? '9+' : data.count;
+                        bellButton.appendChild(newBadge);
+                    }
+                } else if (existingBadge) {
+                    existingBadge.remove();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Update badge every 30 seconds
+    setInterval(updateNotificationBadge, 30000);
+    // Initial call
+    updateNotificationBadge();
+    // ========== END SCRIPT NOTIFIKASI ==========
 </script>
 
 @stack('scripts')

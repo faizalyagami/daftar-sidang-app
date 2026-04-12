@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ReviewerController;
 use App\Http\Controllers\Admin\AcademicPeriodController;
 use App\Http\Controllers\Admin\JadwalController;
+use App\Http\Controllers\NotificationController;
 
 // Guest routes
 Route::get('/', function () {
@@ -47,10 +48,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/pendaftaran', [AdminController::class, 'allPendaftaran'])->name('pendaftaran');
     Route::get('/pendaftaran/skripsi/{id}', [AdminController::class, 'showSkripsi'])->name('pendaftaran.skripsi.show');
     Route::get('/pendaftaran/metodologi/{id}', [AdminController::class, 'showMetodologi'])->name('pendaftaran.metodologi.show');
-    
+
     Route::get('/pendaftaran/{type}/{id}/assign', [AdminController::class, 'showAssignForm'])->name('pendaftaran.assign-form');
     Route::post('/pendaftaran/{type}/{id}/assign', [AdminController::class, 'assignReviewer'])->name('pendaftaran.assign');
-    
+
     Route::resource('academic-periods', AcademicPeriodController::class);
     Route::get('/academic-periods/{id}/set-active', [AcademicPeriodController::class, 'setActive'])->name('academic-periods.set-active');
     Route::post('/users/{id}/reset-password', [AdminController::class, 'resetPassword'])->name('users.reset-password');
@@ -58,21 +59,20 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/mahasiswa/{id}/periods', [AdminController::class, 'getMahasiswaPeriods'])->name('admin.mahasiswa.periods');
 
     Route::prefix('jadwal')->name('jadwal.')->group(function () {
-    Route::get('/', [JadwalController::class, 'index'])->name('index');
+        Route::get('/', [JadwalController::class, 'index'])->name('index');
 
-    Route::get('/skripsi/create/{id}', [JadwalController::class, 'createSkripsi'])->name('skripsi.create');
-    Route::post('/skripsi/store/{id}', [JadwalController::class, 'storeSkripsi'])->name('skripsi.store');
-    Route::get('/skripsi/edit/{id}', [JadwalController::class, 'editSkripsi'])->name('skripsi.edit');
-    Route::put('/skripsi/update/{id}', [JadwalController::class, 'updateSkripsi'])->name('skripsi.update');
-    Route::delete('/skripsi/destroy/{id}', [JadwalController::class, 'destroySkripsi'])->name('skripsi.destroy');
+        Route::get('/skripsi/create/{id}', [JadwalController::class, 'createSkripsi'])->name('skripsi.create');
+        Route::post('/skripsi/store/{id}', [JadwalController::class, 'storeSkripsi'])->name('skripsi.store');
+        Route::get('/skripsi/edit/{id}', [JadwalController::class, 'editSkripsi'])->name('skripsi.edit');
+        Route::put('/skripsi/update/{id}', [JadwalController::class, 'updateSkripsi'])->name('skripsi.update');
+        Route::delete('/skripsi/destroy/{id}', [JadwalController::class, 'destroySkripsi'])->name('skripsi.destroy');
 
-    Route::get('/metodologi/create/{id}', [JadwalController::class, 'createMetodologi'])->name('metodologi.create');
-    Route::post('/metodologi/store/{id}', [JadwalController::class, 'storeMetodologi'])->name('metodologi.store');
-    Route::get('/metodologi/edit/{id}', [JadwalController::class, 'editMetodologi'])->name('metodologi.edit');
-    Route::put('/metodologi/update/{id}', [JadwalController::class, 'updateMetodologi'])->name('metodologi.update');
-    Route::delete('/metodologi/destroy/{id}', [JadwalController::class, 'destroyMetodologi'])->name('metodologi.destroy');
-  
-});
+        Route::get('/metodologi/create/{id}', [JadwalController::class, 'createMetodologi'])->name('metodologi.create');
+        Route::post('/metodologi/store/{id}', [JadwalController::class, 'storeMetodologi'])->name('metodologi.store');
+        Route::get('/metodologi/edit/{id}', [JadwalController::class, 'editMetodologi'])->name('metodologi.edit');
+        Route::put('/metodologi/update/{id}', [JadwalController::class, 'updateMetodologi'])->name('metodologi.update');
+        Route::delete('/metodologi/destroy/{id}', [JadwalController::class, 'destroyMetodologi'])->name('metodologi.destroy');
+    });
 });
 
 // Reviewer routes
@@ -97,4 +97,11 @@ Route::middleware(['auth'])->prefix('mahasiswa')->name('mahasiswa.')->group(func
     Route::post('/daftar-metodologi', [MahasiswaController::class, 'storeMetodologi'])->name('store-metodologi');
     Route::get('/skripsi/{id}', [MahasiswaController::class, 'showSkripsi'])->name('show-skripsi');
     Route::get('/metodologi/{id}', [MahasiswaController::class, 'showMetodologi'])->name('show-metodologi');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
 });
