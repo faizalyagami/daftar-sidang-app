@@ -755,7 +755,21 @@
     }
     // Panggil setupFileUpload untuk setiap id file
     setupFileUpload('bukti_pembayaran_registrasi', 'file-info-registrasi');
-    // ... (setup untuk semua file upload)
+    setupFileUpload('bukti_pembayaran_sidang', 'file-info-sidang');
+    setupFileUpload('bukti_pembayaran_skripsi', 'file-info-skripsi');
+    setupFileUpload('frs', 'file-info-frs');
+    setupFileUpload('transkrip_nilai', 'file-info-transkrip');
+    setupFileUpload('surat_bebas_perpus', 'file-info-perpus');
+    setupFileUpload('surat_bebas_alat_tes', 'file-info-alat-tes');
+    setupFileUpload('sertifikat_pesantren', 'file-info-pesantren');
+    setupFileUpload('sertifikat_sks_non_akademik', 'file-info-sks');
+    setupFileUpload('surat_lolos_turnitin', 'file-info-turnitin');
+    setupFileUpload('sertifikat_toefl', 'file-info-toefl');
+    setupFileUpload('pas_foto', 'file-info-foto');
+    setupFileUpload('buku_bimbingan', 'file-info-bimbingan');
+    setupFileUpload('surat_perbaikan', 'file-info-perbaikan');
+    setupFileUpload('surat_ijin_sidang', 'file-info-ijin');
+    setupFileUpload('berkas_skripsi', 'file-info-berkas');
 
     // Form submit loading state
     document.getElementById('skripsiForm')?.addEventListener('submit', function() {

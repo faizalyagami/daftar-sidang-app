@@ -39,7 +39,6 @@
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
-                                32
                                 <th>No</th>
                                 <th>Semester</th>
                                 <th>Tahun Akademik</th>

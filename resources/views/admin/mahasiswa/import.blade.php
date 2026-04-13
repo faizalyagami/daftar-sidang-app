@@ -128,7 +128,6 @@
                 <div class="table-responsive">
                     <table class="table table-sm table-bordered">
                         <thead class="table-light">
-                            32
                             <th>NPM</th>
                             <th>Nama Mahasiswa</th>
                             <th>NIK Dosen Wali</th>
