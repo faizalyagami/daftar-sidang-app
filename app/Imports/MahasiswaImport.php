@@ -100,7 +100,7 @@ class MahasiswaImport implements ToCollection, WithHeadingRow
                             ->exists();
                     }
 
-                    // Jika belum terdaftar di periode ini, buat pendaftaran baru
+                    //Jika belum terdaftar di periode ini, buat pendaftaran baru
                     if (!$sudahTerdaftar) {
                         $this->createPendaftaran($mahasiswaId);
                         $this->registeredCount++;
@@ -112,7 +112,7 @@ class MahasiswaImport implements ToCollection, WithHeadingRow
                     $mahasiswaId = $mahasiswa->id;
                     $this->importedCount++;
 
-                    // Buat pendaftaran untuk mahasiswa baru
+                    //Buat pendaftaran untuk mahasiswa baru
                     $this->createPendaftaran($mahasiswaId);
                     $this->registeredCount++;
                 }
@@ -195,7 +195,7 @@ class MahasiswaImport implements ToCollection, WithHeadingRow
                 'academic_period_id' => $this->academicPeriodId,
                 'judul_skripsi' => 'Belum diisi',
                 'dosen_pembimbing' => 'Belum ditentukan',
-                'status' => 'pending',
+                'status' => 'belum_daftar',
             ];
 
             \Log::info('Insert skripsi data:', $data);
@@ -208,7 +208,7 @@ class MahasiswaImport implements ToCollection, WithHeadingRow
                 'judul_penelitian' => 'Belum diisi',
                 'dosen_pembimbing' => 'Belum ditentukan',
                 'kuliah_peminatan' => 'Belum dipilih',
-                'status' => 'pending',
+                'status' => 'belum_daftar',
             ];
 
             \Log::info('Insert metodologi data:', $data);

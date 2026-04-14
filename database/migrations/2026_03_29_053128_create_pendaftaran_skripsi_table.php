@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('dosen_pembimbing');
             $table->string('narasumber')->nullable();
             $table->date('tanggal_seminar')->nullable();
-            $table->enum('status', ['pending', 'review', 'approved', 'rejected'])->default('pending');
+            $table->enum('status', ['belum_daftar', 'pending', 'review', 'approved', 'rejected', 'revision'])->default('belum_daftar');
             $table->text('reviewer_notes')->nullable();
             $table->timestamps();
         });

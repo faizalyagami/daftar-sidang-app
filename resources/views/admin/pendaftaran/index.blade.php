@@ -79,8 +79,42 @@
                                         <td>{{ $item->mahasiswa->user->name }}</td>
                                         <td>{{ Str::limit($item->judul_skripsi, 50) }}</td>
                                         <td>
-                                            <span class="status-badge status-{{ $item->status }}">
-                                                {{ ucfirst($item->status) }}
+                                            @php
+                                            $statusText = '';
+                                            $statusClass = '';
+
+                                            switch($item->status) {
+                                            case 'belum_daftar':
+                                            $statusText = 'Belum Daftar';
+                                            $statusClass = 'status-pending';
+                                            break;
+                                            case 'pending':
+                                            $statusText = 'Menunggu Review';
+                                            $statusClass = 'status-pending';
+                                            break;
+                                            case 'review':
+                                            $statusText = 'Direview';
+                                            $statusClass = 'status-review';
+                                            break;
+                                            case 'approved':
+                                            $statusText = 'Disetujui';
+                                            $statusClass = 'status-approved';
+                                            break;
+                                            case 'rejected':
+                                            $statusText = 'Ditolak';
+                                            $statusClass = 'status-rejected';
+                                            break;
+                                            case 'revision':
+                                            $statusText = 'Revisi';
+                                            $statusClass = 'status-revision';
+                                            break;
+                                            default:
+                                            $statusText = ucfirst($item->status);
+                                            $statusClass = 'status-pending';
+                                            }
+                                            @endphp
+                                            <span class="status-badge {{ $statusClass }}">
+                                                {{ $statusText }}
                                             </span>
                                         </td>
                                         <td>
@@ -136,8 +170,42 @@
                                         <td>{{ Str::limit($item->judul_penelitian, 50) }}</td>
                                         <td>{{ $item->dosen_pembimbing }}</td>
                                         <td>
-                                            <span class="status-badge status-{{ $item->status }}">
-                                                {{ ucfirst($item->status) }}
+                                            @php
+                                            $statusText = '';
+                                            $statusClass = '';
+
+                                            switch($item->status) {
+                                            case 'belum_daftar':
+                                            $statusText = 'Belum Daftar';
+                                            $statusClass = 'status-pending';
+                                            break;
+                                            case 'pending':
+                                            $statusText = 'Menunggu Review';
+                                            $statusClass = 'status-pending';
+                                            break;
+                                            case 'review':
+                                            $statusText = 'Direview';
+                                            $statusClass = 'status-review';
+                                            break;
+                                            case 'approved':
+                                            $statusText = 'Disetujui';
+                                            $statusClass = 'status-approved';
+                                            break;
+                                            case 'rejected':
+                                            $statusText = 'Ditolak';
+                                            $statusClass = 'status-rejected';
+                                            break;
+                                            case 'revision':
+                                            $statusText = 'Revisi';
+                                            $statusClass = 'status-revision';
+                                            break;
+                                            default:
+                                            $statusText = ucfirst($item->status);
+                                            $statusClass = 'status-pending';
+                                            }
+                                            @endphp
+                                            <span class="status-badge {{ $statusClass }}">
+                                                {{ $statusText }}
                                             </span>
                                         </td>
                                         <td>

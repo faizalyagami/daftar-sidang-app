@@ -10,8 +10,8 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-        {
-            Schema::create('jadwal_metodologi', function (Blueprint $table) {
+    {
+        Schema::create('jadwal_metodologi', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pendaftaran_id')->constrained('pendaftaran_metodologi')->onDelete('cascade');
             $table->date('tanggal');
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('dosen_penguji_1')->nullable();
             $table->string('dosen_penguji_2')->nullable();
             $table->text('keterangan')->nullable();
-            $table->enum('status', ['terjadwal', 'selesai', 'batal'])->default('terjadwal');
+            $table->enum('status', ['belum_daftar', 'terjadwal', 'selesai', 'batal', 'revisi'])->default('belum_daftar');
             $table->timestamps();
         });
     }
