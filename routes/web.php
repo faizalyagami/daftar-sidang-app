@@ -72,12 +72,15 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::get('/metodologi/edit/{id}', [JadwalController::class, 'editMetodologi'])->name('metodologi.edit');
         Route::put('/metodologi/update/{id}', [JadwalController::class, 'updateMetodologi'])->name('metodologi.update');
         Route::delete('/metodologi/destroy/{id}', [JadwalController::class, 'destroyMetodologi'])->name('metodologi.destroy');
+        Route::get('/export-skripsi', [JadwalController::class, 'exportSkripsi'])->name('jadwal.export-skripsi');
+        Route::get('/export-metodologi', [JadwalController::class, 'exportMetodologi'])->name('jadwal.export-metodologi');
     });
 });
 
 // Reviewer routes
 Route::middleware(['auth'])->prefix('reviewer')->name('reviewer.')->group(function () {
     Route::get('/dashboard', [ReviewerController::class, 'dashboard'])->name('dashboard');
+    Route::get('/history', [ReviewerController::class, 'history'])->name('reviewer.history');
     Route::get('/skripsi/{id}', [ReviewerController::class, 'reviewSkripsi'])->name('skripsi.review');
     Route::post('/skripsi/{id}/review', [ReviewerController::class, 'submitSkripsiReview'])->name('skripsi.submit');
     Route::post('/skripsi/{id}/approve', [ReviewerController::class, 'approveSkripsi'])->name('skripsi.approve');

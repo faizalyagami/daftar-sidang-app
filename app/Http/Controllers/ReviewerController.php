@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicPeriod;
 use App\Models\PendaftaranSkripsi;
 use App\Models\PendaftaranMetodologi;
 use App\Models\ReviewerAssignment;
@@ -27,50 +28,86 @@ class ReviewerController extends Controller
         });
     }
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $reviewerId = Auth::id();
-        
-        // Ambil pendaftaran skripsi yang diassign ke reviewer ini
-        $skripsi = PendaftaranSkripsi::with('mahasiswa.user')
+        $periodId = $request->get('period_id');
+
+        // Query skripsi
+        $skripsiQuery = PendaftaranSkripsi::with('mahasiswa.user')
             ->where('reviewer_id', $reviewerId)
-            ->whereIn('status', ['review', 'revision'])
-            ->latest()
-            ->get();
+            ->whereIn('status', ['review', 'revision']);
         
-        // Ambil pendaftaran metodologi yang diassign ke reviewer ini
-        $metodologi = PendaftaranMetodologi::with('mahasiswa.user')
+        // Query metodologi
+        $metodologiQuery = PendaftaranMetodologi::with('mahasiswa.user')
             ->where('reviewer_id', $reviewerId)
-            ->whereIn('status', ['review', 'revision'])
-            ->latest()
-            ->get();
-        
-        // Hitung statistik
+            ->whereIn('status', ['review', 'revision']);
+
+        // Filter periode
+        if ($periodId) {
+            $skripsiQuery->where('academic_period_id', $periodId);
+            $metodologiQuery->where('academic_period_id', $periodId);
+        }
+
+        $skripsi = $skripsiQuery->latest()->get();
+        $metodologi = $metodologiQuery->latest()->get();
+
+        // Hitung statistik dengan filter
         $totalPending = PendaftaranSkripsi::where('reviewer_id', $reviewerId)
             ->where('status', 'review')
+            ->when($periodId, fn($q) => $q->where('academic_period_id', $periodId))
             ->count() + PendaftaranMetodologi::where('reviewer_id', $reviewerId)
             ->where('status', 'review')
+            ->when($periodId, fn($q) => $q->where('academic_period_id', $periodId))
             ->count();
-            
+
         $totalRevision = PendaftaranSkripsi::where('reviewer_id', $reviewerId)
             ->where('status', 'revision')
+            ->when($periodId, fn($q) => $q->where('academic_period_id', $periodId))
             ->count() + PendaftaranMetodologi::where('reviewer_id', $reviewerId)
             ->where('status', 'revision')
+            ->when($periodId, fn($q) => $q->where('academic_period_id', $periodId))
             ->count();
-            
+
         $totalCompleted = PendaftaranSkripsi::where('reviewer_id', $reviewerId)
             ->where('status', 'approved')
+            ->when($periodId, fn($q) => $q->where('academic_period_id', $periodId))
             ->count() + PendaftaranMetodologi::where('reviewer_id', $reviewerId)
             ->where('status', 'approved')
+            ->when($periodId, fn($q) => $q->where('academic_period_id', $periodId))
             ->count();
+
+        $periods = AcademicPeriod::orderBy('tahun_akademik', 'desc')->get();
+
+        return view('reviewer.dashboard', compact('skripsi', 'metodologi', 'totalPending', 'totalRevision', 'totalCompleted', 'periods'));
+    }
+
+    public function history(Request $request)
+    {
+        $reviewerId = Auth::id();
+        $periodId = $request->get('period_id');
+
+        // Query skripsi yang sudah selesai (approved, rejected, revision)
+        $skripsiQuery = PendaftaranSkripsi::with('mahasiswa.user')
+            ->where('reviewer_id', $reviewerId)
+            ->whereIn('status', ['approved', 'rejected', 'revision']);
         
-        return view('reviewer.dashboard', compact(
-            'skripsi', 
-            'metodologi', 
-            'totalPending', 
-            'totalRevision', 
-            'totalCompleted'
-        ));
+        // Query metodologi yang sudah selesai
+        $metodologiQuery = PendaftaranMetodologi::with('mahasiswa.user')
+            ->where('reviewer_id', $reviewerId)
+            ->whereIn('status', ['approved', 'rejected', 'revision']);
+
+        if ($periodId) {
+            $skripsiQuery->where('academic_period_id', $periodId);
+            $metodologiQuery->where('academic_period_id', $periodId);
+        }
+
+        $skripsi = $skripsiQuery->latest()->get();
+        $metodologi = $metodologiQuery->latest()->get();
+
+        $periods = AcademicPeriod::orderBy('tahun_akademik', 'desc')->get();
+
+        return view('reviewer.history', compact('skripsi', 'metodologi', 'periods'));
     }
 
     public function reviewSkripsi($id)

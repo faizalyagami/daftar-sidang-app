@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\JadwalMetodologiExport;
+use App\Exports\JadwalSkripsiExport;
 use App\Http\Controllers\Controller;
 use App\Models\Dosen;
 use App\Models\PendaftaranSkripsi;
@@ -9,6 +11,7 @@ use App\Models\PendaftaranMetodologi;
 use App\Models\JadwalSkripsi;
 use App\Models\JadwalMetodologi;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Excel;
 
 class JadwalController extends Controller
 {
@@ -140,5 +143,17 @@ class JadwalController extends Controller
         $jadwal = JadwalSkripsi::findOrFail($id);
         $jadwal->delete();
         return redirect()->route('admin.jadwal.index')->with('success', 'Jadwal sidang skripsi dihapus.');
+    }
+
+    public function exportSkripsi()
+    {
+        $jadwal = JadwalSkripsi::with('pendaftaran.mahasiswa.user')->get();
+        return Excel::download(new JadwalSkripsiExport($jadwal), 'jadwal_skripsi.xlsx');
+    }
+
+    public function exportMetodologi()
+    {
+        $jadwal = JadwalMetodologi::with('pendaftaran.mahasiswa.user')->get();
+        return Excel::download(new JadwalMetodologiExport($jadwal), 'jadwal_metodologi.xlsx');
     }
 }

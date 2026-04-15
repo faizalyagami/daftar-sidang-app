@@ -120,10 +120,20 @@
                 @elseif($userRole == 'reviewer')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('reviewer.dashboard') ? 'active' : '' }}" 
-                           href="{{ route('reviewer.dashboard') }}">
+                        href="{{ route('reviewer.dashboard') }}">
                             <i class="bi bi-speedometer2"></i>
                             <span>Dashboard Review</span>
                             @if(request()->routeIs('reviewer.dashboard'))
+                                <span class="nav-indicator"></span>
+                            @endif
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('reviewer.history') ? 'active' : '' }}" 
+                        href="{{ route('reviewer.reviewer.history') }}">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Riwayat Review</span>
+                            @if(request()->routeIs('reviewer.history'))
                                 <span class="nav-indicator"></span>
                             @endif
                         </a>
