@@ -111,7 +111,8 @@ class JadwalController extends Controller
     public function editSkripsi($id)
     {
         $jadwal = JadwalSkripsi::with('pendaftaran.mahasiswa.user')->findOrFail($id);
-        return view('admin.jadwal.edit-skripsi', compact('jadwal'));
+        $dosens = Dosen::active()->orderBy('name')->get();
+        return view('admin.jadwal.edit-skripsi', compact('jadwal', 'dosens'));
     }
 
     public function updateSkripsi(Request $request, $id)

@@ -47,7 +47,6 @@
                                             if($jadwal) {
                                                 if($jadwal->dosen_penguji_1) $penguji[] = $jadwal->dosen_penguji_1;
                                                 if($jadwal->dosen_penguji_2) $penguji[] = $jadwal->dosen_penguji_2;
-                                                if($jadwal->dosen_penguji_3) $penguji[] = $jadwal->dosen_penguji_3;
                                             }
                                         @endphp
                                         <tr>

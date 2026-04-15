@@ -255,14 +255,20 @@
                                 <div class="status-label">
                                     <i class="bi bi-file-earmark-text"></i> SIDANG SKRIPSI
                                 </div>
-                                <span class="status-skripsi {{ $skripsiStatusClass ?? 'status-badge-pending' }}">
-                                    {{ $skripsiStatusText ?? 'Belum Mendaftar' }}
+                                @php
+                                    $skripsiStatus = $mahasiswa->getSkripsiStatus();
+                                @endphp
+                                <span class="status-skripsi {{ $skripsiStatus['class'] }}">
+                                    {{ $skripsiStatus['text'] }}
                                 </span>
                                 <div class="status-label mt-2">
                                     <i class="bi bi-book"></i> UJIAN METODOLOGI
                                 </div>
-                                <span class="status-metodologi {{ $metodologiStatusClass ?? 'status-badge-pending' }}">
-                                    {{ $metodologiStatusText ?? 'Belum Mendaftar' }}
+                                @php
+                                    $metodologiStatus = $mahasiswa->getMetodologiStatus();
+                                @endphp
+                                <span class="status-metodologi {{ $metodologiStatus['class'] }}">
+                                    {{ $metodologiStatus['text'] }}
                                 </span>
                             </div>
                         </td>

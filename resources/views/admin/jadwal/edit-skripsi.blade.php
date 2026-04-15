@@ -35,15 +35,35 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label>Dosen Penguji 1</label>
-                        <input type="text" name="dosen_penguji_1" class="form-control" value="{{ $jadwal->dosen_penguji_1 }}">
+                        <select class="form-select select2-dosen @error('dosen_penguji_1') is-invalid @enderror"
+                            name="narasumber"
+                            style="width: 100%;">
+                            <option value="">-- Cari Dosen Penguji 1 --</option>
+                            @foreach($dosens as $dosen)
+                            <option value="{{ $dosen->name }}" {{ old('narasumber') == $dosen->name ? 'selected' : '' }}>
+                                {{ $dosen->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                        @error('narasumber')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="col-md-6 mb-3">
                         <label>Dosen Penguji 2</label>
-                        <input type="text" name="dosen_penguji_2" class="form-control" value="{{ $jadwal->dosen_penguji_2 }}">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label>Dosen Penguji 3 (Opsional)</label>
-                        <input type="text" name="dosen_penguji_3" class="form-control" value="{{ $jadwal->dosen_penguji_3 }}">
+                        <select class="form-select select2-dosen @error('dosen_penguji_2') is-invalid @enderror"
+                            name="narasumber"
+                            style="width: 100%;">
+                            <option value="">-- Cari Dosen Penguji 2 --</option>
+                            @foreach($dosens as $dosen)
+                            <option value="{{ $dosen->name }}" {{ old('narasumber') == $dosen->name ? 'selected' : '' }}>
+                                {{ $dosen->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                        @error('narasumber')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="col-md-12 mb-3">
                         <label>Keterangan</label>
@@ -57,3 +77,22 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    $(document).ready(function() {
+        $('.select2-dosen').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Ketik nama dosen...',
+            allowClear: true,
+            language: {
+                noResults: function() {
+                    return 'Dosen tidak ditemukan. Hubungi admin.';
+                },
+                searching: function() {
+                    return 'Mencari...';
+                }
+            }
+        });
+    });
+@endpush

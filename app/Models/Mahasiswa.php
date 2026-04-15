@@ -24,6 +24,49 @@ class Mahasiswa extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function skripsiTerbaru()
+    {
+        return $this->pendaftaranSkripsi()->latest()->first();
+    }
+
+    public function metodologiTerbaru()
+    {
+        return $this->pendaftaranMetodologi()->latest()->first();
+    }
+
+    public function getSkripsiStatus()
+    {
+        $data = $this->skripsiTerbaru();
+
+        if (!$data || $data->status == 'belum_daftar') {
+            return ['text' => 'Belum Mendaftar', 'class' => 'status-badge-pending'];
+        }
+
+        return match ($data->status) {
+            'approved' => ['text' => 'Disetujui', 'class' => 'status-badge-approved'],
+            'review' => ['text' => 'Review', 'class' => 'status-badge-review'],
+            'rejected' => ['text' => 'Ditolak', 'class' => 'status-badge-rejected'],
+            'revision' => ['text' => 'Revisi', 'class' => 'status-badge-revision'],
+            default => ['text' => 'Sudah Mendaftar', 'class' => 'status-badge-approved'],
+        };
+    }
+
+    public function getMetodologiStatus()
+    {
+        $data = $this->metodologiTerbaru();
+
+        if (!$data || $data->status == 'belum_daftar') {
+            return ['text' => 'Belum Mendaftar', 'class' => 'status-badge-pending'];
+        }
+
+        return match ($data->status) {
+            'approved' => ['text' => 'Disetujui', 'class' => 'status-badge-approved'],
+            'review' => ['text' => 'Review', 'class' => 'status-badge-review'],
+            'rejected' => ['text' => 'Ditolak', 'class' => 'status-badge-rejected'],
+            default => ['text' => 'Sudah Mendaftar', 'class' => 'status-badge-approved'],
+        };
+    }
+
     public function pendaftaranSkripsi()
     {
         return $this->hasMany(PendaftaranSkripsi::class);
