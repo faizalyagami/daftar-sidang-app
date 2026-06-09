@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Mahasiswa;
 use App\Models\PendaftaranSkripsi;
-use App\Models\PendaftaranMetodologi;
 use App\Models\AcademicPeriod;
 use Illuminate\Database\Seeder;
 
@@ -14,7 +13,12 @@ class PendaftaranSeeder extends Seeder
     {
         $periodeAktif = AcademicPeriod::where('is_active', true)->first();
         if (!$periodeAktif) {
-            $this->command->warn('Tidak ada periode aktif. Jalankan AcademicPeriodSeeder terlebih dahulu.');
+            $periodeAktif = AcademicPeriod::first();
+            $this->command->warn('Tidak ada periode aktif, menggunakan periode pertama: ' . ($periodeAktif->id ?? 'null'));
+        }
+
+        if (!$periodeAktif) {
+            $this->command->error('Tidak ada periode akademik. Jalankan AcademicPeriodSeeder terlebih dahulu.');
             return;
         }
 
@@ -24,7 +28,7 @@ class PendaftaranSeeder extends Seeder
             return;
         }
 
-        // Skripsi
+        // Skripsi dengan status approved
         $skripsiData = [
             [
                 'npm' => '10050022251',
@@ -32,6 +36,7 @@ class PendaftaranSeeder extends Seeder
                 'pembimbing' => 'Dr. Endah Nawangsih, M.Psi., Psikolog',
                 'narasumber' => 'Andhita Nurul Khasanah, S.Psi., M.Psi., Psikolog',
                 'tanggal_seminar' => '2026-02-19',
+                'status' => 'approved',
             ],
             [
                 'npm' => '10050019026',
@@ -39,6 +44,7 @@ class PendaftaranSeeder extends Seeder
                 'pembimbing' => 'Lisa Widawati, Dra., M.Si., Psikolog',
                 'narasumber' => 'Rizka Hadian, S.Psi., M.Psi., Psikolog',
                 'tanggal_seminar' => '2026-03-05',
+                'status' => 'approved',
             ],
         ];
 
@@ -55,39 +61,10 @@ class PendaftaranSeeder extends Seeder
                         'dosen_pembimbing' => $data['pembimbing'],
                         'narasumber' => $data['narasumber'],
                         'tanggal_seminar' => $data['tanggal_seminar'],
-                        'status' => 'approved',
+                        'status' => $data['status'],
                     ]
                 );
-            }
-        }
-
-        // Metodologi
-        $metodologiData = [
-            [
-                'npm' => '10050019027',
-                'judul' => 'Metodologi Penelitian: Analisis Korelasi antara Stres Kerja dan Burnout',
-                'pembimbing' => 'Dr. Ihsana Sabriani Boruaglo, M.Si., Psikolog',
-                'email' => 'ariq.zahid@student.unisba.ac.id',
-                'kuliah_peminatan' => 'Psikologi Industri dan Organisasi',
-            ],
-        ];
-
-        foreach ($metodologiData as $data) {
-            $mahasiswa = Mahasiswa::where('npm', $data['npm'])->first();
-            if ($mahasiswa) {
-                PendaftaranMetodologi::updateOrCreate(
-                    [
-                        'mahasiswa_id' => $mahasiswa->id,
-                        'academic_period_id' => $periodeAktif->id,
-                    ],
-                    [
-                        'email' => $data['email'],
-                        'judul_penelitian' => $data['judul'],
-                        'dosen_pembimbing' => $data['pembimbing'],
-                        'kuliah_peminatan' => $data['kuliah_peminatan'],
-                        'status' => 'approved',
-                    ]
-                );
+                $this->command->info("Pendaftaran skripsi untuk {$data['npm']} - status: {$data['status']}");
             }
         }
     }

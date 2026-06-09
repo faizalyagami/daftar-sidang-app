@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Dosen;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Mahasiswa;
@@ -12,14 +13,15 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Admin
-        $admin = User::firstOrCreate(
+        // ==================== ADMIN ====================
+        $admin = User::updateOrCreate(
             ['email' => 'admin@unisba.ac.id'],
             [
                 'name' => 'Admin Sistem',
                 'username' => 'admin',
                 'password' => Hash::make('password123'),
                 'is_default_password' => false,
+                'is_active' => true,
             ]
         );
         Role::updateOrCreate(
@@ -27,14 +29,15 @@ class UserSeeder extends Seeder
             ['role' => 'admin']
         );
 
-        // Reviewer
-        $reviewer = User::firstOrCreate(
+        // ==================== REVIEWER ====================
+        $reviewer = User::updateOrCreate(
             ['email' => 'reviewer@unisba.ac.id'],
             [
                 'name' => 'Reviewer 1',
                 'username' => 'reviewer',
                 'password' => Hash::make('password123'),
                 'is_default_password' => false,
+                'is_active' => true,
             ]
         );
         Role::updateOrCreate(
@@ -42,14 +45,63 @@ class UserSeeder extends Seeder
             ['role' => 'reviewer']
         );
 
-        // Mahasiswa dummy
+        // ==================== DOSEN ====================
+        $dosenList = [
+            [
+                'nik' => 'D.13.0.595',
+                'name' => 'Dinda Dwarawati, S.Psi., M.Psi., Psikolog',
+                'email' => 'dinda.dwarawati@unisba.ac.id',
+                'username' => 'D.13.0.595',
+            ],
+            [
+                'nik' => 'D.15.0.656',
+                'name' => 'Andhita Nurul Khasanah, S.Psi., M.Psi. Psikolog',
+                'email' => 'andhita.nurul@unisba.ac.id',
+                'username' => 'D.15.0.656',
+            ],
+            [
+                'nik' => 'D.12.0.557',
+                'name' => 'Anna Rozana, S.Psi., M.Psi. Psikolog',
+                'email' => 'anna.rozana@unisba.ac.id',
+                'username' => 'D.12.0.557',
+            ],
+        ];
+
+        foreach ($dosenList as $data) {
+            $user = User::updateOrCreate(
+                ['email' => $data['email']],
+                [
+                    'name' => $data['name'],
+                    'username' => $data['username'],
+                    'password' => Hash::make('password123'),
+                    'is_default_password' => true,
+                    'is_active' => true,
+                ]
+            );
+
+            Role::updateOrCreate(
+                ['user_id' => $user->id],
+                ['role' => 'dosen']
+            );
+
+            Dosen::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'nik' => $data['nik'],
+                    'name' => $data['name'],
+                    'is_active' => true,
+                ]
+            );
+        }
+
+        // ==================== MAHASISWA ====================
         $mahasiswaData = [
             [
                 'npm' => '10050022251',
                 'name' => 'PUTI RACHEL LAUDZA SARNOVA',
                 'email' => 'puti.rachel@student.unisba.ac.id',
                 'username' => '10050022251',
-                'password' => Hash::make('10050022251'),
+                'password' => '10050022251',
                 'tempat_lahir' => 'Sukabumi',
                 'tanggal_lahir' => '2003-11-19',
                 'ipk' => 3.25,
@@ -61,7 +113,7 @@ class UserSeeder extends Seeder
                 'name' => 'MOCHAMAD AZMI FAUZAN MUSYAFA',
                 'email' => 'azmi.fauzan@student.unisba.ac.id',
                 'username' => '10050019026',
-                'password' => Hash::make('10050019026'),
+                'password' => '10050019026',
                 'tempat_lahir' => 'Bandung',
                 'tanggal_lahir' => '2000-12-23',
                 'ipk' => 2.57,
@@ -73,7 +125,7 @@ class UserSeeder extends Seeder
                 'name' => 'M. ARIQ ZAHID BAIHAQI',
                 'email' => 'ariq.zahid@student.unisba.ac.id',
                 'username' => '10050019027',
-                'password' => Hash::make('10050019027'),
+                'password' => '10050019027',
                 'tempat_lahir' => 'Sukabumi',
                 'tanggal_lahir' => '2000-09-17',
                 'ipk' => 2.55,
@@ -83,22 +135,23 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($mahasiswaData as $data) {
-            $user = User::firstOrCreate(
+            $user = User::updateOrCreate(
                 ['email' => $data['email']],
                 [
                     'name' => $data['name'],
                     'username' => $data['username'],
-                    'password' => $data['password'],
+                    'password' => Hash::make($data['password']),
                     'is_default_password' => true,
+                    'is_active' => true,
                 ]
             );
 
-            Role::firstOrCreate(
+            Role::updateOrCreate(
                 ['user_id' => $user->id],
                 ['role' => 'mahasiswa']
             );
 
-            Mahasiswa::firstOrCreate(
+            Mahasiswa::updateOrCreate(
                 ['npm' => $data['npm']],
                 [
                     'user_id' => $user->id,

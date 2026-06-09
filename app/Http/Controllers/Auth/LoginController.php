@@ -22,7 +22,7 @@ class LoginController extends Controller
 
         // Cek login dengan username atau email
         $loginType = filter_var($request->username, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        
+
         $credentials = [
             $loginType => $request->username,
             'password' => $request->password,
@@ -32,11 +32,13 @@ class LoginController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
-            
+
             if ($user->hasRole('admin')) {
                 return redirect()->route('admin.dashboard');
             } elseif ($user->hasRole('reviewer')) {
                 return redirect()->route('reviewer.dashboard');
+            } elseif ($user->hasRole('dosen')) {
+                return redirect()->route('dosen.dashboard');
             } else {
                 return redirect()->route('mahasiswa.dashboard');
             }

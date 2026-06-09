@@ -15,21 +15,22 @@
         <div class="navbar-right">
             <!-- Notification Bell -->
             <div class="dropdown me-3">
-                <button class="btn btn-icon dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-icon dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
                     <i class="bi bi-bell"></i>
                     @php
-                    $unreadCount = App\Helpers\NotificationHelper::getUnreadCount(Auth::id());
+                        $unreadCount = App\Helpers\NotificationHelper::getUnreadCount(Auth::id());
                     @endphp
-                    @if($unreadCount > 0)
-                    <span class="notification-badge">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
+                    @if ($unreadCount > 0)
+                        <span class="notification-badge">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
                     @endif
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end notification-dropdown">
                     <li class="dropdown-header">
                         <div class="d-flex justify-content-between align-items-center">
                             <span>Notifikasi</span>
-                            @if($unreadCount > 0)
-                            <a href="#" class="small" id="markAllRead">Tandai semua</a>
+                            @if ($unreadCount > 0)
+                                <a href="#" class="small" id="markAllRead">Tandai semua</a>
                             @endif
                         </div>
                     </li>
@@ -38,46 +39,53 @@
                     </li>
 
                     @php
-                    $notifications = App\Helpers\NotificationHelper::getLatest(Auth::id(), 10);
+                        $notifications = App\Helpers\NotificationHelper::getLatest(Auth::id(), 10);
                     @endphp
 
                     @forelse($notifications as $notif)
-                    <li>
-                        <a class="dropdown-item notification-item {{ !$notif->is_read ? 'bg-light' : '' }}"
-                            href="{{ $notif->link ?: '#' }}"
-                            data-id="{{ $notif->id }}">
-                            <div class="notification-icon bg-{{ 
-                    $notif->type == 'pendaftaran' ? 'primary' : 
-                    ($notif->type == 'review' ? 'success' : 
-                    ($notif->type == 'jadwal' ? 'info' : 'warning')) 
-                }}">
-                                <i class="bi 
-                        {{ $notif->type == 'pendaftaran' ? 'bi-file-earmark-text' : 
-                           ($notif->type == 'review' ? 'bi-check-circle' : 
-                           ($notif->type == 'jadwal' ? 'bi-calendar' : 'bi-info-circle')) 
-                        }}"></i>
-                            </div>
-                            <div class="notification-content">
-                                <div class="notification-title">{{ $notif->title }}</div>
-                                <div class="notification-text">{{ $notif->message }}</div>
-                                <div class="notification-time">{{ $notif->created_at->diffForHumans() }}</div>
-                            </div>
-                        </a>
-                    </li>
+                        <li>
+                            <a class="dropdown-item notification-item {{ !$notif->is_read ? 'bg-light' : '' }}"
+                                href="{{ $notif->link ?: '#' }}" data-id="{{ $notif->id }}">
+                                <div
+                                    class="notification-icon bg-{{ $notif->type == 'pendaftaran'
+                                        ? 'primary'
+                                        : ($notif->type == 'review'
+                                            ? 'success'
+                                            : ($notif->type == 'jadwal'
+                                                ? 'info'
+                                                : 'warning')) }}">
+                                    <i
+                                        class="bi 
+                        {{ $notif->type == 'pendaftaran'
+                            ? 'bi-file-earmark-text'
+                            : ($notif->type == 'review'
+                                ? 'bi-check-circle'
+                                : ($notif->type == 'jadwal'
+                                    ? 'bi-calendar'
+                                    : 'bi-info-circle')) }}"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">{{ $notif->title }}</div>
+                                    <div class="notification-text">{{ $notif->message }}</div>
+                                    <div class="notification-time">{{ $notif->created_at->diffForHumans() }}</div>
+                                </div>
+                            </a>
+                        </li>
                     @empty
-                    <li>
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-inbox fs-4"></i>
-                            <p class="mb-0 mt-2">Tidak ada notifikasi</p>
-                        </div>
-                    </li>
+                        <li>
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-4"></i>
+                                <p class="mb-0 mt-2">Tidak ada notifikasi</p>
+                            </div>
+                        </li>
                     @endforelse
 
                     <li>
                         <hr class="dropdown-divider">
                     </li>
                     <li class="dropdown-footer">
-                        <a href="{{ route('notifications.index') }}" class="text-center d-block">Lihat semua notifikasi</a>
+                        <a href="{{ route('notifications.index') }}" class="text-center d-block">Lihat semua
+                            notifikasi</a>
                     </li>
                 </ul>
             </div>
@@ -87,24 +95,26 @@
                 <button class="btn btn-user dropdown-toggle" type="button" data-bs-toggle="dropdown">
                     <div class="user-avatar-sm">
                         @php
-                        $userRole = Auth::user()->role ? Auth::user()->role->role : null;
-                        $avatarIcon = match($userRole) {
-                        'admin' => 'bi-shield-shaded',
-                        'reviewer' => 'bi-star',
-                        default => 'bi-mortarboard'
-                        };
+                            $userRole = Auth::user()->role ? Auth::user()->role->role : null;
+                            $avatarIcon = match ($userRole) {
+                                'admin' => 'bi-shield-shaded',
+                                'reviewer' => 'bi-star',
+                                default => 'bi-mortarboard',
+                            };
                         @endphp
                         <i class="bi {{ $avatarIcon }}"></i>
                     </div>
                     <div class="user-info">
                         <div class="user-name">{{ Auth::user()->name }}</div>
                         <div class="user-role">
-                            @if($userRole == 'admin')
-                            Administrator
+                            @if ($userRole == 'admin')
+                                Administrator
                             @elseif($userRole == 'reviewer')
-                            Reviewer
+                                Reviewer
+                            @elseif ($userRole == 'dosen')
+                                Dosen
                             @else
-                            Mahasiswa
+                                Mahasiswa
                             @endif
                         </div>
                     </div>
@@ -472,19 +482,19 @@
                         <td><strong>Role</strong></td>
                         <td>: {{ ucfirst($userRole) }}</td>
                     </tr>
-                    @if($userRole == 'mahasiswa' && Auth::user()->mahasiswa)
-                    <tr>
-                        <td><strong>NPM</strong></td>
-                        <td>: {{ Auth::user()->mahasiswa->npm ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Dosen Wali</strong></td>
-                        <td>: {{ Auth::user()->mahasiswa->dosen_wali ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>IPK</strong></td>
-                        <td>: {{ Auth::user()->mahasiswa->ipk ?? '-' }}</td>
-                    </tr>
+                    @if ($userRole == 'mahasiswa' && Auth::user()->mahasiswa)
+                        <tr>
+                            <td><strong>NPM</strong></td>
+                            <td>: {{ Auth::user()->mahasiswa->npm ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Dosen Wali</strong></td>
+                            <td>: {{ Auth::user()->mahasiswa->dosen_wali ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>IPK</strong></td>
+                            <td>: {{ Auth::user()->mahasiswa->ipk ?? '-' }}</td>
+                        </tr>
                     @endif
                 </table>
             </div>

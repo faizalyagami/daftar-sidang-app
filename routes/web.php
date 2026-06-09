@@ -7,6 +7,9 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ReviewerController;
 use App\Http\Controllers\Admin\AcademicPeriodController;
 use App\Http\Controllers\Admin\JadwalController;
+use App\Http\Controllers\Dosen\DashboardController;
+use App\Http\Controllers\Dosen\PenilaianController;
+use App\Http\Controllers\Dosen\DosenController;
 use App\Http\Controllers\NotificationController;
 
 // Guest routes
@@ -28,6 +31,8 @@ Route::middleware(['auth'])->group(function () {
             return redirect()->route('admin.dashboard');
         } elseif ($user->hasRole('reviewer')) {
             return redirect()->route('reviewer.dashboard');
+        } elseif ($user->hasRole('dosen')) {
+            return redirect()->route('dosen.dashboard');
         } else {
             return redirect()->route('mahasiswa.dashboard');
         }
@@ -107,4 +112,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+});
+
+Route::middleware(['auth'])->prefix('dosen')->name('dosen.')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/penilaian', [PenilaianController::class, 'index'])->name('penilaian.index');
+    Route::get('/penilaian/{id}/create', [PenilaianController::class, 'create'])->name('penilaian.create');
+    Route::post('/penilaian/{id}/store', [PenilaianController::class, 'store'])->name('penilaian.store');
+    Route::get('/jadwal', [PenilaianController::class, 'jadwal'])->name('penilaian.jadwal');
 });

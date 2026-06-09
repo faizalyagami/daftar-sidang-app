@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('dosens', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('nik')->nullable()->unique();
             $table->string('name');
             $table->boolean('is_active')->default(true);

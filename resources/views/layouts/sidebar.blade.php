@@ -22,7 +22,7 @@
             <i class="bi bi-x-lg"></i>
         </button>
     </div>
-    
+
     <div class="sidebar-user">
         <div class="user-avatar">
             <i class="bi bi-person-circle"></i>
@@ -33,7 +33,7 @@
                 @php
                     $userRole = Auth::user()->role ? Auth::user()->role->role : null;
                 @endphp
-                @if($userRole == 'admin')
+                @if ($userRole == 'admin')
                     <i class="bi bi-shield-shaded"></i> Administrator
                 @elseif($userRole == 'reviewer')
                     <i class="bi bi-star"></i> Reviewer
@@ -43,7 +43,7 @@
             </span>
         </div>
     </div>
-    
+
     <div class="sidebar-menu">
         <div class="menu-title">MAIN MENU</div>
         <ul class="nav flex-column">
@@ -51,129 +51,137 @@
                 @php
                     $userRole = Auth::user()->role ? Auth::user()->role->role : null;
                 @endphp
-                
-                @if($userRole == 'admin')
+
+                @if ($userRole == 'admin')
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" 
-                           href="{{ route('admin.dashboard') }}">
+                        <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
+                            href="{{ route('admin.dashboard') }}">
                             <i class="bi bi-speedometer2"></i>
                             <span>Dashboard</span>
-                            @if(request()->routeIs('admin.dashboard'))
+                            @if (request()->routeIs('admin.dashboard'))
                                 <span class="nav-indicator"></span>
                             @endif
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.users*') ? 'active' : '' }}" 
-                           href="{{ route('admin.users') }}">
+                        <a class="nav-link {{ request()->routeIs('admin.users*') ? 'active' : '' }}"
+                            href="{{ route('admin.users') }}">
                             <i class="bi bi-people"></i>
                             <span>Kelola User</span>
-                            @if(request()->routeIs('admin.users*'))
+                            @if (request()->routeIs('admin.users*'))
                                 <span class="nav-indicator"></span>
                             @endif
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.mahasiswa*') ? 'active' : '' }}" 
-                           href="{{ route('admin.mahasiswa.index') }}">
+                        <a class="nav-link {{ request()->routeIs('admin.mahasiswa*') ? 'active' : '' }}"
+                            href="{{ route('admin.mahasiswa.index') }}">
                             <i class="bi bi-mortarboard"></i>
                             <span>Data Mahasiswa</span>
-                            @if(request()->routeIs('admin.mahasiswa*'))
+                            @if (request()->routeIs('admin.mahasiswa*'))
                                 <span class="nav-indicator"></span>
                             @endif
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.academic-periods*') ? 'active' : '' }}" 
-                           href="{{ route('admin.academic-periods.index') }}">
+                        <a class="nav-link {{ request()->routeIs('admin.academic-periods*') ? 'active' : '' }}"
+                            href="{{ route('admin.academic-periods.index') }}">
                             <i class="bi bi-calendar-week"></i>
                             <span>Periode Akademik</span>
-                            @if(request()->routeIs('admin.academic-periods*'))
+                            @if (request()->routeIs('admin.academic-periods*'))
                                 <span class="nav-indicator"></span>
                             @endif
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.pendaftaran*') ? 'active' : '' }}" 
-                           href="{{ route('admin.pendaftaran') }}">
+                        <a class="nav-link {{ request()->routeIs('admin.pendaftaran*') ? 'active' : '' }}"
+                            href="{{ route('admin.pendaftaran') }}">
                             <i class="bi bi-file-text"></i>
                             <span>Semua Pendaftaran</span>
-                            @if(request()->routeIs('admin.pendaftaran*'))
+                            @if (request()->routeIs('admin.pendaftaran*'))
                                 <span class="nav-indicator"></span>
                             @endif
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.reviewers.stats') ? 'active' : '' }}" 
-                        href="{{ route('admin.reviewers.stats') }}">
+                        <a class="nav-link {{ request()->routeIs('admin.reviewers.stats') ? 'active' : '' }}"
+                            href="{{ route('admin.reviewers.stats') }}">
                             <i class="bi bi-bar-chart"></i>
                             <span>Statistik Reviewer</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.jadwal*') ? 'active' : '' }}" 
-                        href="{{ route('admin.jadwal.index') }}">
+                        <a class="nav-link {{ request()->routeIs('admin.jadwal*') ? 'active' : '' }}"
+                            href="{{ route('admin.jadwal.index') }}">
                             <i class="bi bi-calendar-event"></i>
                             <span>Jadwal Sidang & Ujian</span>
                         </a>
                     </li>
                 @elseif($userRole == 'reviewer')
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('reviewer.dashboard') ? 'active' : '' }}" 
-                        href="{{ route('reviewer.dashboard') }}">
+                        <a class="nav-link {{ request()->routeIs('reviewer.dashboard') ? 'active' : '' }}"
+                            href="{{ route('reviewer.dashboard') }}">
                             <i class="bi bi-speedometer2"></i>
                             <span>Dashboard Review</span>
-                            @if(request()->routeIs('reviewer.dashboard'))
+                            @if (request()->routeIs('reviewer.dashboard'))
                                 <span class="nav-indicator"></span>
                             @endif
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('reviewer.history') ? 'active' : '' }}" 
-                        href="{{ route('reviewer.reviewer.history') }}">
+                        <a class="nav-link {{ request()->routeIs('reviewer.history') ? 'active' : '' }}"
+                            href="{{ route('reviewer.reviewer.history') }}">
                             <i class="bi bi-clock-history"></i>
                             <span>Riwayat Review</span>
-                            @if(request()->routeIs('reviewer.history'))
+                            @if (request()->routeIs('reviewer.history'))
                                 <span class="nav-indicator"></span>
                             @endif
                         </a>
                     </li>
                 @elseif($userRole == 'mahasiswa')
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('mahasiswa.dashboard') ? 'active' : '' }}" 
-                           href="{{ route('mahasiswa.dashboard') }}">
+                        <a class="nav-link {{ request()->routeIs('mahasiswa.dashboard') ? 'active' : '' }}"
+                            href="{{ route('mahasiswa.dashboard') }}">
                             <i class="bi bi-speedometer2"></i>
                             <span>Dashboard</span>
-                            @if(request()->routeIs('mahasiswa.dashboard'))
+                            @if (request()->routeIs('mahasiswa.dashboard'))
                                 <span class="nav-indicator"></span>
                             @endif
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('mahasiswa.daftar-skripsi*') ? 'active' : '' }}" 
-                           href="{{ route('mahasiswa.daftar-skripsi') }}">
+                        <a class="nav-link {{ request()->routeIs('mahasiswa.daftar-skripsi*') ? 'active' : '' }}"
+                            href="{{ route('mahasiswa.daftar-skripsi') }}">
                             <i class="bi bi-file-earmark-text"></i>
                             <span>Sidang Skripsi</span>
-                            @if(request()->routeIs('mahasiswa.daftar-skripsi*'))
+                            @if (request()->routeIs('mahasiswa.daftar-skripsi*'))
                                 <span class="nav-indicator"></span>
                             @endif
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('mahasiswa.daftar-metodologi*') ? 'active' : '' }}" 
-                           href="{{ route('mahasiswa.daftar-metodologi') }}">
+                        <a class="nav-link {{ request()->routeIs('mahasiswa.daftar-metodologi*') ? 'active' : '' }}"
+                            href="{{ route('mahasiswa.daftar-metodologi') }}">
                             <i class="bi bi-book"></i>
                             <span>Ujian Metodologi</span>
-                            @if(request()->routeIs('mahasiswa.daftar-metodologi*'))
+                            @if (request()->routeIs('mahasiswa.daftar-metodologi*'))
                                 <span class="nav-indicator"></span>
                             @endif
+                        </a>
+                    </li>
+                @elseif($userRole == 'dosen')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('dosen.penilaian*') ? 'active' : '' }}"
+                            href="{{ route('dosen.penilaian.index') }}">
+                            <i class="bi bi-clipboard-check"></i>
+                            <span>Penilaian Sidang</span>
                         </a>
                     </li>
                 @endif
             @endauth
         </ul>
     </div>
-    
+
     <div class="sidebar-footer">
         <div class="menu-title">ACCOUNT</div>
         <ul class="nav flex-column">
@@ -225,19 +233,19 @@
                         <td><strong>Role</strong></td>
                         <td>: {{ ucfirst($userRole) }}</td>
                     </tr>
-                    @if($userRole == 'mahasiswa' && Auth::user()->mahasiswa)
-                    <tr>
-                        <td><strong>NPM</strong></td>
-                        <td>: {{ Auth::user()->mahasiswa->npm ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Dosen Wali</strong></td>
-                        <td>: {{ Auth::user()->mahasiswa->dosen_wali ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>IPK</strong></td>
-                        <td>: {{ Auth::user()->mahasiswa->ipk ?? '-' }}</td>
-                    </tr>
+                    @if ($userRole == 'mahasiswa' && Auth::user()->mahasiswa)
+                        <tr>
+                            <td><strong>NPM</strong></td>
+                            <td>: {{ Auth::user()->mahasiswa->npm ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Dosen Wali</strong></td>
+                            <td>: {{ Auth::user()->mahasiswa->dosen_wali ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>IPK</strong></td>
+                            <td>: {{ Auth::user()->mahasiswa->ipk ?? '-' }}</td>
+                        </tr>
                     @endif
                 </table>
             </div>
