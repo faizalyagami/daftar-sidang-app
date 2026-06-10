@@ -39,6 +39,8 @@
                     <i class="bi bi-star"></i> Reviewer
                 @elseif($userRole == 'mahasiswa')
                     <i class="bi bi-mortarboard"></i> Mahasiswa
+                @elseif($userRole == 'dosen')
+                    <i class="bi bi-person-badge"></i> Dosen
                 @endif
             </span>
         </div>
@@ -130,7 +132,7 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('reviewer.history') ? 'active' : '' }}"
-                            href="{{ route('reviewer.reviewer.history') }}">
+                            href="{{ route('reviewer.history') }}">
                             <i class="bi bi-clock-history"></i>
                             <span>Riwayat Review</span>
                             @if (request()->routeIs('reviewer.history'))
@@ -171,10 +173,27 @@
                     </li>
                 @elseif($userRole == 'dosen')
                     <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('dosen.dashboard') ? 'active' : '' }}"
+                            href="{{ route('dosen.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i>
+                            <span>Dashboard</span>
+                            @if (request()->routeIs('dosen.dashboard'))
+                                <span class="nav-indicator"></span>
+                            @endif
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('dosen.penilaian*') ? 'active' : '' }}"
                             href="{{ route('dosen.penilaian.index') }}">
                             <i class="bi bi-clipboard-check"></i>
                             <span>Penilaian Sidang</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('dosen.penilaian.jadwal') ? 'active' : '' }}"
+                            href="{{ route('dosen.penilaian.jadwal') }}">
+                            <i class="bi bi-calendar"></i>
+                            <span>Jadwal Sidang</span>
                         </a>
                     </li>
                 @endif
@@ -245,6 +264,11 @@
                         <tr>
                             <td><strong>IPK</strong></td>
                             <td>: {{ Auth::user()->mahasiswa->ipk ?? '-' }}</td>
+                        </tr>
+                    @elseif($userRole == 'dosen' && Auth::user()->dosen)
+                        <tr>
+                            <td><strong>NIK</strong></td>
+                            <td>: {{ Auth::user()->dosen->nik ?? '-' }}</td>
                         </tr>
                     @endif
                 </table>

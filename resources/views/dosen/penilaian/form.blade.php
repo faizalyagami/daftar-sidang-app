@@ -165,6 +165,77 @@
                         </button>
                     </div>
                 </form>
+                <div class="mt-5">
+                    <h6 class="mb-3">Lembar Penilaian Kumulatif Sidang Skripsi</h6>
+                    <div class="alert alert-secondary">
+                        <strong>Fakultas Psikologi Universitas Islam Bandung</strong>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Nama Mahasiswa:</strong> {{ $jadwal->pendaftaran->mahasiswa->user->name }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>NPM:</strong> {{ $jadwal->pendaftaran->mahasiswa->npm }}
+                        </div>
+                        <div class="col-md-12 mt-2">
+                            <strong>Judul Penelitian:</strong> {{ $jadwal->pendaftaran->judul_skripsi }}
+                        </div>
+                    </div>
+
+                    @php
+                        $kumulatif = $jadwal->getNilaiKumulatif();
+                    @endphp
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama Penguji</th>
+                                    <th>Bobot</th>
+                                    <th>Nilai</th>
+                                    <th>Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($kumulatif['details'] as $index => $item)
+                                    <tr>
+                                        <td class="text-center">{{ $loop->iteration }}</td>
+                                        <td>{{ $item['nama'] }}</td>
+                                        <td class="text-center">{{ $item['bobot'] }}%</td>
+                                        <td class="text-center">{{ number_format($item['nilai'], 2) }}</td>
+                                        <td class="text-center">{{ number_format($item['jumlah'], 2) }}</td>
+                                    </tr>
+                                @endforeach
+                                <tr class="table-secondary">
+                                    <td colspan="4" class="text-end"><strong>TOTAL NILAI</strong></td>
+                                    <td class="text-center"><strong>{{ number_format($kumulatif['total'], 2) }}</strong>
+                                    </td>
+                                </tr>
+                                <tr class="table-secondary">
+                                    <td colspan="4" class="text-end"><strong>HURUF MUTU</strong></td>
+                                    <td class="text-center"><strong>{{ $kumulatif['huruf_mutu'] }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <strong>Catatan:</strong>
+                        <ul class="mb-0">
+                            <li>Nilai ≤44.00 = E</li>
+                            <li>Nilai 44.01 – 55.49 = D</li>
+                            <li>Nilai 55.50 – 59.49 = C</li>
+                            <li>Nilai 59.50 – 63.49 = C+</li>
+                            <li>Nilai 63.50 – 67.49 = B-</li>
+                            <li>Nilai 67.50 – 71.49 = B</li>
+                            <li>Nilai 71.50 – 75.49 = B+</li>
+                            <li>Nilai 75.50 – 79.50 = A-</li>
+                            <li>Nilai >79.50 = A</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -29,6 +29,11 @@ class PenilaianController extends Controller
     {
         $namaDosen = Auth::user()->name;
 
+        // Cek apakah user memiliki relasi dosen, jika ada ambil dari sana
+        if (Auth::user()->dosen) {
+            $namaDosen = Auth::user()->dosen->name;
+        }
+
         $jadwal = JadwalSkripsi::with(['pendaftaran.mahasiswa.user', 'penilaian'])
             ->where('dosen_penguji_1', $namaDosen)
             ->orWhere('dosen_penguji_2', $namaDosen)
@@ -42,7 +47,10 @@ class PenilaianController extends Controller
     {
         $jadwal = JadwalSkripsi::with('pendaftaran.mahasiswa.user')->findOrFail($id);
 
-        $namaDosen = Auth::user()->dosen->name ?? Auth::user()->name;
+        $namaDosen = Auth::user()->name;
+        if (Auth::user()->dosen) {
+            $namaDosen = Auth::user()->dosen->name;
+        }
 
         $isPenguji = in_array($namaDosen, [
             $jadwal->dosen_penguji_1,
@@ -51,7 +59,7 @@ class PenilaianController extends Controller
         ]);
 
         if (!$isPenguji) {
-            abort(403);
+            abort(403, 'Anda tidak terdaftar sebagai penguji untuk sidang ini.');
         }
 
         $penilaian = PenilaianSkripsi::where('jadwal_skripsi_id', $id)
@@ -66,7 +74,6 @@ class PenilaianController extends Controller
             ]);
         }
 
-        // Jika sudah selesai, view menjadi readonly / hanya lihat
         $isReadOnly = $penilaian->is_completed;
 
         return view('dosen.penilaian.form', compact('jadwal', 'penilaian', 'isReadOnly'));
@@ -111,12 +118,15 @@ class PenilaianController extends Controller
 
     public function jadwal()
     {
-        $dosenId = Auth::user()->dosen->id;
+        $namaDosen = Auth::user()->name;
+        if (Auth::user()->dosen) {
+            $namaDosen = Auth::user()->dosen->name;
+        }
 
         $jadwal = JadwalSkripsi::with(['pendaftaran.mahasiswa.user', 'penilaian'])
-            ->where('dosen_penguji_1_id', $dosenId)
-            ->orWhere('dosen_penguji_2_id', $dosenId)
-            ->orWhere('dosen_penguji_3_id', $dosenId)
+            ->where('dosen_penguji_1', $namaDosen)
+            ->orWhere('dosen_penguji_2', $namaDosen)
+            ->orWhere('dosen_penguji_3', $namaDosen)
             ->orderBy('tanggal', 'desc')
             ->get();
 
@@ -152,7 +162,22 @@ class PenilaianController extends Controller
             ['nilai_akhir' => $totalNilai]
         );
 
-        $rekapitulasi->huruf_mutu = $rekapitulasi->hitungHurufMutu();
-        $rekapitulasi->save();
+        if ($rekapitulasi) {
+            $rekapitulasi->huruf_mutu = $this->hitungHurufMutu($totalNilai);
+            $rekapitulasi->save();
+        }
+    }
+
+    private function hitungHurufMutu($nilai)
+    {
+        if ($nilai <= 44.00) return 'E';
+        if ($nilai <= 55.49) return 'D';
+        if ($nilai <= 59.49) return 'C';
+        if ($nilai <= 63.49) return 'C+';
+        if ($nilai <= 67.49) return 'B-';
+        if ($nilai <= 71.49) return 'B';
+        if ($nilai <= 75.49) return 'B+';
+        if ($nilai <= 79.50) return 'A-';
+        return 'A';
     }
 }

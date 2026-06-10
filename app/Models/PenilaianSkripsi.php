@@ -13,7 +13,7 @@ class PenilaianSkripsi extends Model
 
     protected $fillable = [
         'jadwal_skripsi_id',
-        'dosen_penguji_id',
+        'dosen_id',
         'nama_dosen_penguji',
         'bobot',
         'nilai',
@@ -41,7 +41,7 @@ class PenilaianSkripsi extends Model
 
     public function dosen()
     {
-        return $this->belongsTo(Dosen::class, 'dosen_penguji_id');
+        return $this->belongsTo(Dosen::class, 'dosen_id');
     }
 
     // Hitung jumlah dari aspek-aspek
