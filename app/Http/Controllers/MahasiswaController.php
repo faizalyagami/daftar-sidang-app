@@ -129,40 +129,31 @@ class MahasiswaController extends Controller
                 return redirect()->back()->with('error', 'Data mahasiswa tidak ditemukan. Silakan hubungi admin.');
             }
 
-            $pendaftaran = PendaftaranSkripsi::create([
-                'mahasiswa_id' => $mahasiswa->id,
-                'judul_skripsi' => $request->judul_skripsi,
-                'dosen_pembimbing' => $request->dosen_pembimbing,
-                'narasumber' => $request->narasumber,
-                'tanggal_seminar' => $request->tanggal_seminar,
-                'status' => 'pending',
-                'academic_period_id' => $activePeriod->id,
-            ]);
+            $pendaftaran = PendaftaranSkripsi::where('mahasiswa_id', $mahasiswa->id)
+                ->where('academic_period_id', $activePeriod->id)
+                ->first();
 
-            Notification::createNotification(
-                $mahasiswa->user_id,
-                'pendaftaran',
-                'Pendaftaran Skripsi Berhasil',
-                'Pendaftaran sidang skripsi Anda telah dikirim dan menunggu review.',
-                route('mahasiswa.show-skripsi', $pendaftaran->id),
-                ['status' => 'pending', 'type' => 'skripsi']
-            );
-
-            $admins = User::whereHas('role', function ($q) {
-                $q->where('role', 'admin');
-            })->get();
-
-            foreach ($admins as $admin) {
-                Notification::createNotification(
-                    $admin->id,
-                    'pendaftaran',
-                    'Pendaftaran Skripsi Baru',
-                    "Mahasiswa {$mahasiswa->user->name} telah mendaftar sidang skripsi.",
-                    route('admin.pendaftaran.skripsi.show', $pendaftaran->id),
-                    ['npm' => $mahasiswa->npm, 'nama' => $mahasiswa->user->name]
-                );
+            if ($pendaftaran) {
+                // UPDATE pendaftaran yang sudah ada
+                $pendaftaran->update([
+                    'judul_skripsi' => $request->judul_skripsi,
+                    'dosen_pembimbing' => $request->dosen_pembimbing,
+                    'narasumber' => $request->narasumber,
+                    'tanggal_seminar' => $request->tanggal_seminar,
+                    'status' => 'pending',
+                ]);
+            } else {
+                // Buat pendaftaran baru jika belum ada
+                $pendaftaran = PendaftaranSkripsi::create([
+                    'mahasiswa_id' => $mahasiswa->id,
+                    'academic_period_id' => $activePeriod->id,
+                    'judul_skripsi' => $request->judul_skripsi,
+                    'dosen_pembimbing' => $request->dosen_pembimbing,
+                    'narasumber' => $request->narasumber,
+                    'tanggal_seminar' => $request->tanggal_seminar,
+                    'status' => 'pending',
+                ]);
             }
-
             // Upload dokumen
             $dokumenTypes = [
                 'bukti_pembayaran_registrasi',
@@ -185,6 +176,15 @@ class MahasiswaController extends Controller
 
             foreach ($dokumenTypes as $dokumenType) {
                 if ($request->hasFile($dokumenType)) {
+                    // Hapus dokumen lama
+                    $oldDokumen = DokumenSkripsi::where('pendaftaran_id', $pendaftaran->id)
+                        ->where('jenis_dokumen', $dokumenType)
+                        ->first();
+                    if ($oldDokumen) {
+                        Storage::disk('public')->delete($oldDokumen->file_path);
+                        $oldDokumen->delete();
+                    }
+
                     $file = $request->file($dokumenType);
                     $path = $file->store("dokumen/skripsi/{$pendaftaran->id}/{$dokumenType}", 'public');
 
