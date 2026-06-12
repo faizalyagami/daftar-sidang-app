@@ -160,23 +160,35 @@ class AdminController extends Controller
             ->when($periodId, function ($query, $periodId) {
                 return $query->where('academic_period_id', $periodId);
             })
+            ->orderByRaw("
+                CASE
+                    WHEN status = 'pending' THEN 1
+                    WHEN status = 'review' THEN 2
+                    WHEN status = 'revision' THEN 3
+                    WHEN status = 'approved' THEN 4
+                    WHEN status = 'rejected' THEN 5
+                    ELSE 99
+                END
+            ")
             ->latest()
-            ->get()
-            ->unique(function ($item) {
-                return $item->mahasiswa_id . '_' . $item->academic_period_id;
-            })
-            ->values(); // Reset index setelah unique
+            ->get();
 
         $metodologi = PendaftaranMetodologi::with('mahasiswa.user', 'academicPeriod')
             ->when($periodId, function ($query, $periodId) {
                 return $query->where('academic_period_id', $periodId);
             })
+            ->orderByRaw("
+                CASE
+                    WHEN status = 'pending' THEN 1
+                    WHEN status = 'review' THEN 2
+                    WHEN status = 'revision' THEN 3
+                    WHEN status = 'approved' THEN 4
+                    WHEN status = 'rejected' THEN 5
+                    ELSE 99
+                END
+            ")
             ->latest()
-            ->get()
-            ->unique(function ($item) {
-                return $item->mahasiswa_id . '_' . $item->academic_period_id;
-            })
-            ->values();
+            ->get();
 
         // Pagination manual untuk collection
         $currentPageSkripsi = $request->get('page_skripsi', 1);
