@@ -10,8 +10,13 @@ class Mahasiswa extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'npm', 'tempat_lahir', 'tanggal_lahir', 
-        'ipk', 'no_hp', 'dosen_wali'
+        'user_id',
+        'npm',
+        'tempat_lahir',
+        'tanggal_lahir',
+        'ipk',
+        'no_hp',
+        'dosen_wali'
     ];
 
     protected $casts = [
@@ -77,7 +82,8 @@ class Mahasiswa extends Model
         return $this->hasMany(PendaftaranMetodologi::class);
     }
 
-    public function getSkripsiDuration() {
+    public function getSkripsiDuration()
+    {
         $first = $this->pendaftaranSkripsi()->orderBy('created_at', 'asc')->first();
         if (!$first) return null;
 
@@ -92,7 +98,8 @@ class Mahasiswa extends Model
         return "{$years} tahun {$months} bulan";
     }
 
-    public function getMetodologiDuration() {
+    public function getMetodologiDuration()
+    {
         $first = $this->pendaftaranMetodologi()->orderBy('created_at', 'asc')->first();
         if (!$first) return null;
 
@@ -113,6 +120,9 @@ class Mahasiswa extends Model
             ->with('academicPeriod')
             ->orderBy('created_at')
             ->get()
+            ->unique(function ($item) {
+                return $item->academicPeriod ? $item->academicPeriod->id : null;
+            })
             ->map(function ($p) {
                 return $p->academicPeriod ? $p->academicPeriod->semester . ' ' . $p->academicPeriod->tahun_akademik : 'Periode tidak diketahui';
             });
@@ -124,6 +134,9 @@ class Mahasiswa extends Model
             ->with('academicPeriod')
             ->orderBy('created_at')
             ->get()
+            ->unique(function ($item) {
+                return $item->academicPeriod ? $item->academicPeriod->id : null;
+            })
             ->map(function ($p) {
                 return $p->academicPeriod ? $p->academicPeriod->semester . ' ' . $p->academicPeriod->tahun_akademik : 'Periode tidak diketahui';
             });
