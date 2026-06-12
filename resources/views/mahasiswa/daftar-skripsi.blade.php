@@ -178,6 +178,31 @@
                         </div>
                     </div>
                 @else
+                    @php
+                        $pendaftaranExisting = $mahasiswa
+                            ->pendaftaranSkripsi()
+                            ->where('academic_period_id', $activePeriod->id)
+                            ->first();
+                        $revisiList = [];
+                        if ($pendaftaranExisting && $pendaftaranExisting->status == 'revision') {
+                            $revisiList = $pendaftaranExisting->getCatatanRevisi();
+                        }
+                    @endphp
+
+                    @if (count($revisiList) > 0)
+                        <div class="alert alert-warning mb-4">
+                            <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Dokumen Perlu Diupload
+                                Ulang</h5>
+                            <p>Reviewer meminta Anda untuk mengupload ulang dokumen berikut:</p>
+                            <ul>
+                                @foreach ($revisiList as $revisi)
+                                    <li><strong>{{ $revisi['dokumen'] }}</strong>: {{ $revisi['komentar'] }}</li>
+                                @endforeach
+                            </ul>
+                            <hr>
+                            <p class="mb-0">Silakan upload ulang dokumen yang diminta di bawah ini.</p>
+                        </div>
+                    @endif
                     <!-- Form Card -->
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-4">

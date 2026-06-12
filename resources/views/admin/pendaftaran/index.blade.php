@@ -361,6 +361,10 @@
                                 <table class="table table-hover mb-0">
                                     <thead class="table-light">
                                         <tr>
+                                            <th width="50">
+                                                <input type="checkbox" id="selectAllMetodologi"
+                                                    title="Hanya pendaftaran dengan status 'Menunggu Review' yang dapat dipilih">
+                                            </th>
                                             <th>No</th>
                                             <th>Tanggal</th>
                                             <th>Periode</th>
@@ -380,8 +384,8 @@
                                             @endphp
                                             <tr>
                                                 <td>
-                                                    <input type="checkbox" class="checkbox-skripsi"
-                                                        data-id="{{ $item->id }}" data-type="skripsi"
+                                                    <input type="checkbox" class="checkbox-metodologi"
+                                                        data-id="{{ $item->id }}" data-type="metodologi"
                                                         {{ !$isAssignable ? 'disabled' : '' }}>
                                                 </td>
                                                 <td class="align-middle">{{ $loop->iteration }}</td>

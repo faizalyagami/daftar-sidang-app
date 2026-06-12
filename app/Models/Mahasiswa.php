@@ -141,4 +141,64 @@ class Mahasiswa extends Model
                 return $p->academicPeriod ? $p->academicPeriod->semester . ' ' . $p->academicPeriod->tahun_akademik : 'Periode tidak diketahui';
             });
     }
+
+    public function getFeedbackSkripsi()
+    {
+        $pendaftaran = $this->pendaftaranSkripsi()
+            ->where('status', 'approved')
+            ->latest()
+            ->first();
+
+        if (!$pendaftaran || !$pendaftaran->jadwal) {
+            return null;
+        }
+
+        $feedback = $pendaftaran->jadwal->feedback()->first();
+        return $feedback;
+    }
+
+    public function getFeedbackMetodologi()
+    {
+        $pendaftaran = $this->pendaftaranMetodologi()
+            ->where('status', 'approved')
+            ->latest()
+            ->first();
+
+        if (!$pendaftaran || !$pendaftaran->jadwal) {
+            return null;
+        }
+
+        $feedback = $pendaftaran->jadwal->feedback()->first();
+        return $feedback;
+    }
+
+    public function getNilaiAkhirSkripsi()
+    {
+        $pendaftaran = $this->pendaftaranSkripsi()
+            ->where('status', 'approved')
+            ->latest()
+            ->first();
+
+        if (!$pendaftaran || !$pendaftaran->jadwal) {
+            return null;
+        }
+
+        $rekapitulasi = $pendaftaran->jadwal->rekapitulasi()->first();
+        return $rekapitulasi;
+    }
+
+    public function getNilaiAkhirMetodologi()
+    {
+        $pendaftaran = $this->pendaftaranMetodologi()
+            ->where('status', 'approved')
+            ->latest()
+            ->first();
+
+        if (!$pendaftaran || !$pendaftaran->jadwal) {
+            return null;
+        }
+
+        $rekapitulasi = $pendaftaran->jadwal->rekapitulasi()->first();
+        return $rekapitulasi;
+    }
 }

@@ -77,7 +77,7 @@
     if (markAllReadBtn) {
         markAllReadBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            fetch('{{ route("notifications.mark-all-read") }}', {
+            fetch('{{ route('notifications.mark-all-read') }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -140,5 +140,3 @@
     updateNotificationBadge();
     // ========== END SCRIPT NOTIFIKASI ==========
 </script>
-
-@stack('scripts')

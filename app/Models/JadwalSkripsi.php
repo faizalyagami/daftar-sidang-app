@@ -95,4 +95,9 @@ class JadwalSkripsi extends Model
     {
         return $this->hasMany(FeedbackSkripsi::class, 'jadwal_skripsi_id');
     }
+
+    public function rekapitulasi()
+    {
+        return $this->hasOne(RekapitulasiNilaiSkripsi::class, 'jadwal_skripsi_id');
+    }
 }

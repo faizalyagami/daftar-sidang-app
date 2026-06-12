@@ -106,6 +106,8 @@ Route::middleware(['auth'])->prefix('mahasiswa')->name('mahasiswa.')->group(func
     Route::post('/daftar-metodologi', [MahasiswaController::class, 'storeMetodologi'])->name('store-metodologi');
     Route::get('/skripsi/{id}', [MahasiswaController::class, 'showSkripsi'])->name('show-skripsi');
     Route::get('/metodologi/{id}', [MahasiswaController::class, 'showMetodologi'])->name('show-metodologi');
+    Route::get('/edit-skripsi/{id}', [MahasiswaController::class, 'editSkripsi'])->name('edit-skripsi');
+    Route::put('/update-skripsi/{id}', [MahasiswaController::class, 'updateSkripsi'])->name('update-skripsi');
 });
 
 Route::middleware(['auth'])->group(function () {

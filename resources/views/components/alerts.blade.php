@@ -1,28 +1,75 @@
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show fade-in" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i>
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+@if (session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: @json(session('success')),
+                confirmButtonColor: '#6366f1',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        });
+    </script>
 @endif
 
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show fade-in" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+@if (session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: @json(session('error')),
+                confirmButtonColor: '#ef4444'
+            });
+        });
+    </script>
 @endif
 
-@if($errors->any())
-    <div class="alert alert-danger alert-dismissible fade show fade-in" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        <strong>Terjadi kesalahan:</strong>
-        <ul class="mb-0 mt-2">
-            @foreach($errors->all() as $error)
+@if (session('warning'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Perhatian',
+                text: @json(session('warning')),
+                confirmButtonColor: '#f59e0b'
+            });
+        });
+    </script>
+@endif
+
+@if (session('info'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'info',
+                title: 'Informasi',
+                text: @json(session('info')),
+                confirmButtonColor: '#3b82f6'
+            });
+        });
+    </script>
+@endif
+
+@if ($errors->any())
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            let errorList = `
+        <ul style="text-align:left;padding-left:20px;margin-top:10px;">
+            @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
             @endforeach
         </ul>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+    `;
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Terjadi Kesalahan',
+                html: errorList,
+                confirmButtonColor: '#ef4444'
+            });
+        });
+    </script>
 @endif

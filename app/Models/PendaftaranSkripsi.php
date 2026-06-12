@@ -60,12 +60,19 @@ class PendaftaranSkripsi extends Model
 
     public function updateStatusFromReviews()
     {
-        if ($this->allDocumentsValid()) {
+        $hasReupload = $this->reviewDetails()->where('status', 'reupload')->exists();
+        $hasInvalid = $this->reviewDetails()->where('status', 'invalid')->exists();
+        $allValid = !$hasReupload && !$hasInvalid;
+
+        if ($allValid) {
+            // Semua dokumen valid, lanjut sidang
             $this->update(['status' => 'approved']);
-        } elseif ($this->reviewDetails()->where('status', 'reupload')->exists()) {
+        } elseif ($hasReupload) {
+            // Ada yang perlu upload ulang, status revision
             $this->update(['status' => 'revision']);
         } else {
-            $this->update(['status' => 'review']);
+            // Ada yang invalid (tapi tidak perlu upload ulang)
+            $this->update(['status' => 'rejected']);
         }
     }
 
@@ -75,7 +82,54 @@ class PendaftaranSkripsi extends Model
     }
 
     public function jadwal()
-{
-    return $this->hasOne(JadwalSkripsi::class, 'pendaftaran_id');
-}
+    {
+        return $this->hasOne(JadwalSkripsi::class, 'pendaftaran_id');
+    }
+
+    public function getDokumenYangPerluDirevisi()
+    {
+        return $this->reviewDetails()
+            ->where('status', 'reupload')
+            ->get();
+    }
+
+    public function getCatatanRevisi()
+    {
+        $revisi = $this->reviewDetails()
+            ->where('status', 'reupload')
+            ->get();
+
+        $catatan = [];
+        foreach ($revisi as $r) {
+            $namaDokumen = $this->getNamaDokumen($r->jenis_dokumen);
+            $catatan[] = [
+                'dokumen' => $namaDokumen,
+                'komentar' => $r->komentar
+            ];
+        }
+        return $catatan;
+    }
+
+    private function getNamaDokumen($jenis)
+    {
+        $list = [
+            'bukti_pembayaran_registrasi' => 'Bukti Pembayaran Registrasi Terakhir',
+            'bukti_pembayaran_sidang' => 'Bukti Pembayaran Sidang',
+            'bukti_pembayaran_skripsi' => 'Bukti Pembayaran Skripsi',
+            'frs' => 'Formulir Rencana Studi (FRS)',
+            'transkrip_nilai' => 'Transkrip Nilai',
+            'surat_bebas_perpus' => 'Surat Bebas Perpustakaan',
+            'surat_bebas_alat_tes' => 'Surat Bebas Alat Tes',
+            'sertifikat_pesantren' => 'Sertifikat Pesantren',
+            'sertifikat_sks_non_akademik' => 'Sertifikat SKS Non Akademik',
+            'surat_lolos_turnitin' => 'Surat Lolos Turnitin',
+            'sertifikat_toefl' => 'Sertifikat TOEFL',
+            'pas_foto' => 'Pas Foto',
+            'buku_bimbingan' => 'Buku Bimbingan',
+            'surat_perbaikan' => 'Surat Perbaikan',
+            'surat_ijin_sidang' => 'Surat Ijin Sidang',
+            'berkas_skripsi' => 'Berkas Skripsi'
+        ];
+        return $list[$jenis] ?? $jenis;
+    }
 }
