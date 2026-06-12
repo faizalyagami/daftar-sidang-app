@@ -39,8 +39,8 @@ class MahasiswaController extends Controller
         $mahasiswa = Auth::user()->mahasiswa;
 
         // Pendaftaran
-        $pendaftaranSkripsi = $mahasiswa->pendaftaranSkripsi()->latest()->get();
-        $pendaftaranMetodologi = $mahasiswa->pendaftaranMetodologi()->latest()->get();
+        $pendaftaranSkripsi = $mahasiswa->pendaftaranSkripsi()->where('status', '!=', 'belum_daftar')->latest()->get();
+        $pendaftaranMetodologi = $mahasiswa->pendaftaranMetodologi()->where('status', '!=', 'belum_daftar')->latest()->get();
 
         // Durasi
         $skripsiDuration = $mahasiswa->getSkripsiDuration();
@@ -63,6 +63,27 @@ class MahasiswaController extends Controller
             $jadwalMetodologi = $metodologiApproved->jadwal;
         }
 
+        //feedback dan nilai akhir
+        $feedbackSkripsi = $mahasiswa->getFeedbackSkripsi();
+        $feedbackMetodologi = $mahasiswa->getFeedbackMetodologi();
+        $nilaiAkhirSkripsi = $mahasiswa->getNilaiAkhirSkripsi();
+        $nilaiAkhirMetodologi = $mahasiswa->getNilaiAkhirMetodologi();
+
+        // REVISI / UPLOAD ULANG
+        $revisiSkripsi = [];
+        $revisiMetodologi = [];
+
+        $pendaftaranSkripsiAktif = $pendaftaranSkripsi->first();
+        if ($pendaftaranSkripsiAktif && $pendaftaranSkripsiAktif->status == 'revision') {
+            $revisiSkripsi = $pendaftaranSkripsiAktif->getCatatanRevisi();
+        }
+
+        $pendaftaranMetodologiAktif = $pendaftaranMetodologi->first();
+        if ($pendaftaranMetodologiAktif && $pendaftaranMetodologiAktif->status == 'revision') {
+            $revisiMetodologi = $pendaftaranMetodologiAktif->getCatatanRevisi();
+        }
+
+
         return view('mahasiswa.dashboard', compact(
             'pendaftaranSkripsi',
             'pendaftaranMetodologi',
@@ -71,7 +92,13 @@ class MahasiswaController extends Controller
             'skripsiPeriods',
             'metodologiPeriods',
             'jadwalSkripsi',
-            'jadwalMetodologi'
+            'jadwalMetodologi',
+            'feedbackSkripsi',
+            'feedbackMetodologi',
+            'nilaiAkhirSkripsi',
+            'nilaiAkhirMetodologi',
+            'revisiSkripsi',
+            'revisiMetodologi'
         ));
     }
 
@@ -326,6 +353,116 @@ class MahasiswaController extends Controller
         }
 
         return view('mahasiswa.show-skripsi', compact('pendaftaran'));
+    }
+
+    // app/Http/Controllers/MahasiswaController.php
+
+    public function editSkripsi($id)
+    {
+        $pendaftaran = PendaftaranSkripsi::with(['mahasiswa', 'dokumen'])->findOrFail($id);
+
+        // Pastikan milik mahasiswa yang login
+        if ($pendaftaran->mahasiswa_id != Auth::user()->mahasiswa->id) {
+            abort(403);
+        }
+
+        // Ambil daftar dokumen yang perlu direvisi
+        $revisiList = [];
+        if ($pendaftaran->status == 'revision') {
+            $revisiList = $pendaftaran->getCatatanRevisi();
+        }
+
+        $activePeriod = AcademicPeriod::getActive();
+        $mahasiswa = Auth::user()->mahasiswa;
+        $dosens = Dosen::active()->orderBy('name')->get();
+
+        return view('mahasiswa.edit-skripsi', compact('pendaftaran', 'activePeriod', 'mahasiswa', 'dosens', 'revisiList'));
+    }
+
+    public function updateSkripsi(Request $request, $id)
+    {
+        $pendaftaran = PendaftaranSkripsi::findOrFail($id);
+
+        // Pastikan milik mahasiswa yang login
+        if ($pendaftaran->mahasiswa_id != Auth::user()->mahasiswa->id) {
+            abort(403);
+        }
+
+        // Validasi hanya untuk dokumen yang perlu diupload ulang
+        $revisiList = $pendaftaran->getCatatanRevisi();
+        $rules = [];
+
+        foreach ($revisiList as $revisi) {
+            $field = $this->getFieldNameFromDokumen($revisi['dokumen']);
+            if ($field) {
+                $rules[$field] = 'required|file|mimes:pdf,jpg,jpeg,png|max:2048';
+            }
+        }
+
+        // Jika ada dokumen yang diupload, validasi
+        if (!empty($rules)) {
+            $request->validate($rules);
+        }
+
+        // Upload dokumen yang direvisi
+        foreach ($revisiList as $revisi) {
+            $field = $this->getFieldNameFromDokumen($revisi['dokumen']);
+            if ($field && $request->hasFile($field)) {
+                // Hapus dokumen lama
+                $oldDokumen = DokumenSkripsi::where('pendaftaran_id', $pendaftaran->id)
+                    ->where('jenis_dokumen', $field)
+                    ->first();
+                if ($oldDokumen) {
+                    Storage::disk('public')->delete($oldDokumen->file_path);
+                    $oldDokumen->delete();
+                }
+
+                // Upload baru
+                $file = $request->file($field);
+                $path = $file->store("dokumen/skripsi/{$pendaftaran->id}/{$field}", 'public');
+
+                DokumenSkripsi::create([
+                    'pendaftaran_id' => $pendaftaran->id,
+                    'jenis_dokumen' => $field,
+                    'file_path' => $path
+                ]);
+            }
+        }
+
+        \App\Models\ReviewDetail::where('pendaftaran_id', $pendaftaran->id)
+            ->where('pendaftaran_type', PendaftaranSkripsi::class)
+            ->delete();
+
+        $pendaftaran->update([
+            'status' => 'review',
+            'reviewer_notes' => null
+        ]);
+
+        return redirect()->route('mahasiswa.dashboard')->with('success', 'Dokumen berhasil diupload ulang. Menunggu review kembali.');
+    }
+
+    private function getFieldNameFromDokumen($namaDokumen)
+    {
+        $mapping = [
+            'Bukti Pembayaran Registrasi Terakhir' => 'bukti_pembayaran_registrasi',
+            'Bukti Pembayaran Sidang' => 'bukti_pembayaran_sidang',
+            'Bukti Pembayaran Skripsi' => 'bukti_pembayaran_skripsi',
+            'Formulir Rencana Studi (FRS)' => 'frs',
+            'Transkrip Nilai' => 'transkrip_nilai',
+            'Surat Bebas Perpustakaan' => 'surat_bebas_perpus',
+            'Surat Bebas Alat Tes' => 'surat_bebas_alat_tes',
+            'Sertifikat Pesantren' => 'sertifikat_pesantren',
+            'Sertifikat SKS Non Akademik' => 'sertifikat_sks_non_akademik',
+            'Surat Lolos Turnitin' => 'surat_lolos_turnitin',
+            'Sertifikat TOEFL' => 'sertifikat_toefl',
+            'Pas Foto' => 'pas_foto',
+            'Buku Bimbingan' => 'buku_bimbingan',
+            'Surat Perbaikan' => 'surat_perbaikan',
+            'Surat Ijin Sidang' => 'surat_ijin_sidang',
+            'Berkas Skripsi' => 'berkas_skripsi'
+        ];
+
+        return $mapping[$namaDokumen] ?? null;
     }
 
     public function showMetodologi($id)
