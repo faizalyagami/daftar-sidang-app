@@ -16,9 +16,9 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             DosenSeeder::class,
             AcademicPeriodSeeder::class,
-            PendaftaranSeeder::class,
-            JadwalSeeder::class,
-            PenilaianSeeder::class
+            // PendaftaranSeeder::class,
+            // JadwalSeeder::class,
+            // PenilaianSeeder::class
         ]);
     }
 }

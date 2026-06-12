@@ -56,6 +56,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     Route::get('/pendaftaran/{type}/{id}/assign', [AdminController::class, 'showAssignForm'])->name('pendaftaran.assign-form');
     Route::post('/pendaftaran/{type}/{id}/assign', [AdminController::class, 'assignReviewer'])->name('pendaftaran.assign');
+    Route::post('/pendaftaran/bulk-assign', [AdminController::class, 'bulkAssign'])->name('pendaftaran.bulk-assign');
 
     Route::resource('academic-periods', AcademicPeriodController::class);
     Route::get('/academic-periods/{id}/set-active', [AcademicPeriodController::class, 'setActive'])->name('academic-periods.set-active');
@@ -85,7 +86,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 // Reviewer routes
 Route::middleware(['auth'])->prefix('reviewer')->name('reviewer.')->group(function () {
     Route::get('/dashboard', [ReviewerController::class, 'dashboard'])->name('dashboard');
-    Route::get('/history', [ReviewerController::class, 'history'])->name('reviewer.history');
+    Route::get('/history', [ReviewerController::class, 'history'])->name('history');
     Route::get('/skripsi/{id}', [ReviewerController::class, 'reviewSkripsi'])->name('skripsi.review');
     Route::post('/skripsi/{id}/review', [ReviewerController::class, 'submitSkripsiReview'])->name('skripsi.submit');
     Route::post('/skripsi/{id}/approve', [ReviewerController::class, 'approveSkripsi'])->name('skripsi.approve');
@@ -119,5 +120,7 @@ Route::middleware(['auth'])->prefix('dosen')->name('dosen.')->group(function () 
     Route::get('/penilaian', [PenilaianController::class, 'index'])->name('penilaian.index');
     Route::get('/penilaian/{id}/create', [PenilaianController::class, 'create'])->name('penilaian.create');
     Route::post('/penilaian/{id}/store', [PenilaianController::class, 'store'])->name('penilaian.store');
+    Route::get('/penilaian/{id}/feedback', [PenilaianController::class, 'feedback'])->name('penilaian.feedback');
+    Route::post('/penilaian/{id}/feedback', [PenilaianController::class, 'storeFeedback'])->name('penilaian.feedback.store');
     Route::get('/jadwal', [PenilaianController::class, 'jadwal'])->name('penilaian.jadwal');
 });

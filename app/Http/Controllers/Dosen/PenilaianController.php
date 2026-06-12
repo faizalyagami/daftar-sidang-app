@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Dosen;
 
 use App\Http\Controllers\Controller;
+use App\Models\FeedbackSkripsi;
 use App\Models\JadwalSkripsi;
 use App\Models\PenilaianSkripsi;
 use App\Models\RekapitulasiNilaiSkripsi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class PenilaianController extends Controller
 {
@@ -40,7 +42,7 @@ class PenilaianController extends Controller
             ->orWhere('dosen_penguji_3', $namaDosen)
             ->get();
 
-        return view('dosen.penilaian.index', compact('jadwal'));
+        return view('dosen.penilaian.index', compact('jadwal', 'namaDosen'));
     }
 
     public function create($id)
@@ -179,5 +181,80 @@ class PenilaianController extends Controller
         if ($nilai <= 75.49) return 'B+';
         if ($nilai <= 79.50) return 'A-';
         return 'A';
+    }
+
+    public function feedback($id)
+    {
+        $jadwal = JadwalSkripsi::with('pendaftaran.mahasiswa.user')->findOrFail($id);
+
+        $namaDosen = Auth::user()->name;
+        if (Auth::user()->dosen) {
+            $namaDosen = Auth::user()->dosen->name;
+        }
+
+        // Cek apakah dosen ini adalah penguji
+        $isPenguji = in_array($namaDosen, [
+            $jadwal->dosen_penguji_1,
+            $jadwal->dosen_penguji_2,
+            $jadwal->dosen_penguji_3
+        ]);
+
+        if (!$isPenguji) {
+            abort(403, 'Anda tidak terdaftar sebagai penguji untuk sidang ini.');
+        }
+
+        $feedback = FeedbackSkripsi::where('jadwal_skripsi_id', $id)
+            ->where('dosen_id', Auth::user()->dosen->id ?? null)
+            ->first();
+
+        if (!$feedback) {
+            $feedback = FeedbackSkripsi::create([
+                'jadwal_skripsi_id' => $id,
+                'dosen_id' => Auth::user()->dosen->id ?? null,
+                'nama_dosen' => $namaDosen,
+                'is_completed' => false
+            ]);
+        }
+
+        $isReadOnly = $feedback->is_completed;
+
+        return view('dosen.penilaian.feedback', compact('jadwal', 'feedback', 'isReadOnly'));
+    }
+
+    public function storeFeedback(Request $request, $id)
+    {
+        $feedback = FeedbackSkripsi::findOrFail($id);
+
+        $request->validate([
+            'rekomendasi' => 'required|in:layak,perbaikan_minor,perbaikan_mayor,tidak_layak',
+            'catatan_perbaikan' => 'nullable|string',
+            'catatan_bagian_depan' => 'nullable|string',
+            'catatan_bab1' => 'nullable|string',
+            'catatan_bab2' => 'nullable|string',
+            'catatan_bab3' => 'nullable|string',
+            'catatan_bab4' => 'nullable|string',
+            'catatan_bab5' => 'nullable|string',
+            'catatan_daftar_pustaka' => 'nullable|string',
+            'catatan_presentasi' => 'nullable|string',
+        ]);
+
+        $feedback->update([
+            'rekomendasi' => $request->rekomendasi,
+            'catatan_perbaikan' => $request->catatan_perbaikan,
+            'catatan_bagian_depan' => $request->catatan_bagian_depan,
+            'catatan_bab1' => $request->catatan_bab1,
+            'catatan_bab2' => $request->catatan_bab2,
+            'catatan_bab3' => $request->catatan_bab3,
+            'catatan_bab4' => $request->catatan_bab4,
+            'catatan_bab5' => $request->catatan_bab5,
+            'catatan_daftar_pustaka' => $request->catatan_daftar_pustaka,
+            'catatan_presentasi' => $request->catatan_presentasi,
+            'perbaikan_mayor' => $request->has('perbaikan_mayor'),
+            'perbaikan_minor' => $request->has('perbaikan_minor'),
+            'is_completed' => true
+        ]);
+
+        return redirect()->route('dosen.penilaian.index')
+            ->with('success', 'Lembar feedback berhasil disimpan. Silakan lanjutkan ke penilaian.');
     }
 }

@@ -90,4 +90,9 @@ class JadwalSkripsi extends Model
         if ($nilai <= 79.50) return 'A-';
         return 'A';
     }
+
+    public function feedback()
+    {
+        return $this->hasMany(FeedbackSkripsi::class, 'jadwal_skripsi_id');
+    }
 }
