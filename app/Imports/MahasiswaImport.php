@@ -12,23 +12,28 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class MahasiswaImport implements ToCollection, WithHeadingRow
+class MahasiswaImport implements ToCollection, WithHeadingRow, WithChunkReading
 {
     private $importedCount = 0;
     private $updatedCount = 0;
-    private $registeredCount = 0; // jumlah pendaftaran yang dibuat
+    private $registeredCount = 0;
     private $errors = [];
     private $rowNumber = 0;
 
-    protected $jenisPerwalian; // 'skripsi' atau 'metodologi'
+    protected $jenisPerwalian;
     protected $academicPeriodId;
+
+    // Cache existing data
+    private $existingNpms = [];
+    private $existingPendaftaran = [];
 
     public function chunkSize(): int
     {
-        return 100;
+        return 200;
     }
 
     public function __construct($jenisPerwalian, $academicPeriodId)
@@ -36,130 +41,243 @@ class MahasiswaImport implements ToCollection, WithHeadingRow
         $this->jenisPerwalian = $jenisPerwalian;
         $this->academicPeriodId = $academicPeriodId;
 
-        // Debug: log nilai yang diterima
-        \Log::info('MahasiswaImport constructed', [
-            'jenis_perwalian' => $this->jenisPerwalian,
-            'academic_period_id' => $this->academicPeriodId
-        ]);
+        // Pre-load existing data untuk pengecekan cepat
+        $this->existingNpms = Mahasiswa::pluck('npm')->toArray();
+
+        // Pre-load pendaftaran yang sudah ada di periode ini (untuk cek duplikat)
+        if ($jenisPerwalian == 'skripsi') {
+            $existing = PendaftaranSkripsi::where('academic_period_id', $academicPeriodId)
+                ->pluck('mahasiswa_id')
+                ->toArray();
+            foreach ($existing as $id) {
+                $mahasiswa = Mahasiswa::find($id);
+                if ($mahasiswa) {
+                    $this->existingPendaftaran[$mahasiswa->npm] = true;
+                }
+            }
+        } else {
+            $existing = PendaftaranMetodologi::where('academic_period_id', $academicPeriodId)
+                ->pluck('mahasiswa_id')
+                ->toArray();
+            foreach ($existing as $id) {
+                $mahasiswa = Mahasiswa::find($id);
+                if ($mahasiswa) {
+                    $this->existingPendaftaran[$mahasiswa->npm] = true;
+                }
+            }
+        }
     }
 
     public function collection(Collection $rows)
     {
+        $batchUsers = [];
+        $batchMahasiswas = [];
+
+        foreach ($rows as $row) {
+            $this->rowNumber++;
+
+            if (empty($row['npm']) && empty($row['nama_mahasiswa'])) {
+                continue;
+            }
+
+            if (empty($row['npm'])) {
+                $this->errors[] = "Baris {$this->rowNumber}: NPM tidak boleh kosong";
+                continue;
+            }
+
+            if (empty($row['nama_mahasiswa'])) {
+                $this->errors[] = "Baris {$this->rowNumber}: Nama Mahasiswa tidak boleh kosong";
+                continue;
+            }
+
+            $npm = trim((string)$row['npm']);
+            $nama = trim((string)$row['nama_mahasiswa']);
+            $dosenWali = isset($row['dosen_wali']) ? trim((string)$row['dosen_wali']) : null;
+            $tempatLahir = isset($row['tmpt_lahir']) ? trim((string)$row['tmpt_lahir']) : null;
+            $ipk = isset($row['ipk_3_digit']) ? (float)$row['ipk_3_digit'] : (isset($row['ipk']) ? (float)$row['ipk'] : null);
+
+            $tanggalLahir = null;
+            if (isset($row['tgl_lahir']) && !empty($row['tgl_lahir'])) {
+                $tanggalLahir = $this->formatTanggalLahir(trim((string)$row['tgl_lahir']));
+            }
+
+            $isExisting = in_array($npm, $this->existingNpms);
+
+            if ($isExisting) {
+                // Update existing mahasiswa
+                $this->updateExistingMahasiswa($npm, $nama, $tempatLahir, $tanggalLahir, $ipk, $dosenWali);
+                $this->updatedCount++;
+
+                // Cek apakah sudah punya pendaftaran di periode ini
+                if (!isset($this->existingPendaftaran[$npm])) {
+                    $this->createPendaftaranForNpm($npm);
+                    $this->registeredCount++;
+                }
+            } else {
+                // Siapkan data untuk batch insert mahasiswa baru
+                $email = $this->generateEmail($nama, $npm);
+                $username = $npm;
+                $password = Hash::make($npm);
+                $now = now();
+
+                $batchUsers[] = [
+                    'name' => $nama,
+                    'email' => $email,
+                    'username' => $username,
+                    'password' => $password,
+                    'is_default_password' => true,
+                    'is_active' => true,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+
+                $batchMahasiswas[] = [
+                    'npm' => $npm,
+                    'tempat_lahir' => $tempatLahir,
+                    'tanggal_lahir' => $tanggalLahir,
+                    'ipk' => $ipk,
+                    'dosen_wali' => $dosenWali,
+                    'no_hp' => '',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+
+                $this->importedCount++;
+                $this->registeredCount++; // Akan dibuat pendaftaran setelah batch insert
+            }
+        }
+
+        // Batch insert untuk mahasiswa baru
+        if (!empty($batchUsers)) {
+            $this->batchInsertMahasiswa($batchUsers, $batchMahasiswas);
+        }
+    }
+
+    private function batchInsertMahasiswa($users, $mahasiswas)
+    {
+        if (empty($users)) return;
+
         DB::beginTransaction();
 
         try {
-            foreach ($rows as $row) {
-                $this->rowNumber++;
+            // Insert users
+            User::insert($users);
 
-                // Lewati baris kosong
-                if (empty($row['npm']) && empty($row['nama_mahasiswa'])) {
-                    continue;
+            // Ambil user yang baru diinsert
+            $insertedUsers = User::whereIn('username', array_column($users, 'username'))->get();
+
+            $rolesToInsert = [];
+            $mahasiswasWithUserId = [];
+            $pendaftaranToInsert = [];
+
+            foreach ($insertedUsers as $user) {
+                // Roles
+                $rolesToInsert[] = [
+                    'user_id' => $user->id,
+                    'role' => 'mahasiswa',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+
+                // Mahasiswa
+                $mahasiswaData = collect($mahasiswas)->firstWhere('npm', $user->username);
+                if ($mahasiswaData) {
+                    $mahasiswasWithUserId[] = [
+                        'user_id' => $user->id,
+                        'npm' => $mahasiswaData['npm'],
+                        'tempat_lahir' => $mahasiswaData['tempat_lahir'],
+                        'tanggal_lahir' => $mahasiswaData['tanggal_lahir'],
+                        'ipk' => $mahasiswaData['ipk'],
+                        'dosen_wali' => $mahasiswaData['dosen_wali'],
+                        'no_hp' => $mahasiswaData['no_hp'],
+                        'created_at' => $mahasiswaData['created_at'],
+                        'updated_at' => $mahasiswaData['updated_at'],
+                    ];
+
+                    // Siapkan pendaftaran untuk mahasiswa baru
+                    $pendaftaranToInsert[] = [
+                        'mahasiswa_id' => 0, // placeholder, akan diupdate setelah insert
+                        'npm' => $mahasiswaData['npm'],
+                        'academic_period_id' => $this->academicPeriodId,
+                        'judul_skripsi' => 'Belum diisi',
+                        'dosen_pembimbing' => 'Belum ditentukan',
+                        'status' => 'belum_daftar',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+            }
+
+            // Batch insert roles
+            if (!empty($rolesToInsert)) {
+                Role::insert($rolesToInsert);
+            }
+
+            // Batch insert mahasiswas
+            if (!empty($mahasiswasWithUserId)) {
+                Mahasiswa::insert($mahasiswasWithUserId);
+            }
+
+            // Insert pendaftaran untuk mahasiswa baru
+            if (!empty($pendaftaranToInsert)) {
+                // Ambil ID mahasiswa yang baru diinsert
+                $newMahasiswas = Mahasiswa::whereIn('npm', array_column($pendaftaranToInsert, 'npm'))->get();
+
+                $finalPendaftaran = [];
+                foreach ($pendaftaranToInsert as $p) {
+                    $mahasiswa = $newMahasiswas->firstWhere('npm', $p['npm']);
+                    if ($mahasiswa) {
+                        $finalPendaftaran[] = [
+                            'mahasiswa_id' => $mahasiswa->id,
+                            'academic_period_id' => $p['academic_period_id'],
+                            'judul_skripsi' => $p['judul_skripsi'],
+                            'dosen_pembimbing' => $p['dosen_pembimbing'],
+                            'status' => $p['status'],
+                            'created_at' => $p['created_at'],
+                            'updated_at' => $p['updated_at'],
+                        ];
+                    }
                 }
 
-                // Validasi
-                if (empty($row['npm'])) {
-                    $this->errors[] = "Baris {$this->rowNumber}: NPM tidak boleh kosong";
-                    continue;
-                }
-
-                if (empty($row['nama_mahasiswa'])) {
-                    $this->errors[] = "Baris {$this->rowNumber}: Nama Mahasiswa tidak boleh kosong";
-                    continue;
-                }
-
-                // Bersihkan data
-                $npm = trim((string)$row['npm']);
-                $nama = trim((string)$row['nama_mahasiswa']);
-                $dosenWali = isset($row['dosen_wali']) ? trim((string)$row['dosen_wali']) : null;
-                $tempatLahir = isset($row['tmpt_lahir']) ? trim((string)$row['tmpt_lahir']) : null;
-                $ipk = isset($row['ipk_3_digit']) ? (float)$row['ipk_3_digit'] : (isset($row['ipk']) ? (float)$row['ipk'] : null);
-
-                $tanggalLahir = null;
-                if (isset($row['tgl_lahir']) && !empty($row['tgl_lahir'])) {
-                    $tanggalLahir = $this->formatTanggalLahir(trim((string)$row['tgl_lahir']));
-                }
-
-                // Cek apakah mahasiswa sudah ada
-                $existingMahasiswa = Mahasiswa::where('npm', $npm)->first();
-
-                if ($existingMahasiswa) {
-                    // Update data mahasiswa
-                    $this->updateMahasiswa($existingMahasiswa, $nama, $tempatLahir, $tanggalLahir, $ipk, $dosenWali);
-                    $this->updatedCount++;
-                    $mahasiswaId = $existingMahasiswa->id;
-
-                    // CEK APAKAH SUDAH TERDAFTAR DI PERIODE INI
-                    $sudahTerdaftar = false;
+                if (!empty($finalPendaftaran)) {
                     if ($this->jenisPerwalian == 'skripsi') {
-                        $sudahTerdaftar = PendaftaranSkripsi::where('mahasiswa_id', $mahasiswaId)
-                            ->where('academic_period_id', $this->academicPeriodId)
-                            ->exists();
+                        PendaftaranSkripsi::insert($finalPendaftaran);
                     } else {
-                        $sudahTerdaftar = PendaftaranMetodologi::where('mahasiswa_id', $mahasiswaId)
-                            ->where('academic_period_id', $this->academicPeriodId)
-                            ->exists();
+                        // Untuk metodologi
+                        $metodologiData = [];
+                        foreach ($finalPendaftaran as $p) {
+                            $mahasiswa = Mahasiswa::find($p['mahasiswa_id']);
+                            $metodologiData[] = [
+                                'mahasiswa_id' => $p['mahasiswa_id'],
+                                'academic_period_id' => $p['academic_period_id'],
+                                'email' => $mahasiswa ? $mahasiswa->user->email : '',
+                                'judul_penelitian' => 'Belum diisi',
+                                'dosen_pembimbing' => 'Belum ditentukan',
+                                'kuliah_peminatan' => 'Belum dipilih',
+                                'status' => 'belum_daftar',
+                                'created_at' => $p['created_at'],
+                                'updated_at' => $p['updated_at'],
+                            ];
+                        }
+                        PendaftaranMetodologi::insert($metodologiData);
                     }
-
-                    //Jika belum terdaftar di periode ini, buat pendaftaran baru
-                    if (!$sudahTerdaftar) {
-                        $this->createPendaftaran($mahasiswaId);
-                        $this->registeredCount++;
-                    }
-                } else {
-                    // Buat user dan mahasiswa baru
-                    $user = $this->createUser($nama, $npm);
-                    $mahasiswa = $this->createMahasiswa($user->id, $npm, $tempatLahir, $tanggalLahir, $ipk, $dosenWali);
-                    $mahasiswaId = $mahasiswa->id;
-                    $this->importedCount++;
-
-                    //Buat pendaftaran untuk mahasiswa baru
-                    $this->createPendaftaran($mahasiswaId);
-                    $this->registeredCount++;
                 }
             }
 
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->errors[] = 'Error: ' . $e->getMessage();
-            Log::error('Import Error: ' . $e->getMessage());
-            throw $e;
+            $this->errors[] = 'Batch insert error: ' . $e->getMessage();
+            Log::error('Batch insert error: ' . $e->getMessage());
         }
     }
 
-    private function createUser($nama, $npm)
+    private function updateExistingMahasiswa($npm, $nama, $tempatLahir, $tanggalLahir, $ipk, $dosenWali)
     {
-        $user = User::create([
-            'name' => $nama,
-            'email' => $this->generateEmail($nama, $npm),
-            'username' => $npm,
-            'password' => Hash::make($npm), // default password = NPM
-            'is_default_password' => true,
-        ]);
+        $mahasiswa = Mahasiswa::where('npm', $npm)->first();
+        if (!$mahasiswa) return;
 
-        Role::create([
-            'user_id' => $user->id,
-            'role' => 'mahasiswa'
-        ]);
-
-        return $user;
-    }
-
-    private function createMahasiswa($userId, $npm, $tempatLahir, $tanggalLahir, $ipk, $dosenWali)
-    {
-        return Mahasiswa::create([
-            'user_id' => $userId,
-            'npm' => $npm,
-            'tempat_lahir' => $tempatLahir,
-            'tanggal_lahir' => $tanggalLahir,
-            'ipk' => $ipk,
-            'dosen_wali' => $dosenWali,
-            'no_hp' => '',
-        ]);
-    }
-
-    private function updateMahasiswa($mahasiswa, $nama, $tempatLahir, $tanggalLahir, $ipk, $dosenWali)
-    {
+        // Update mahasiswa
         $mahasiswa->update([
             'tempat_lahir' => $tempatLahir,
             'tanggal_lahir' => $tanggalLahir,
@@ -167,52 +285,48 @@ class MahasiswaImport implements ToCollection, WithHeadingRow
             'dosen_wali' => $dosenWali,
         ]);
 
-        if ($mahasiswa->user->name != $nama) {
+        // Update user name jika perlu
+        if ($mahasiswa->user && $mahasiswa->user->name != $nama) {
             $mahasiswa->user->update(['name' => $nama]);
-        }
-
-        if ($mahasiswa->user->username != $mahasiswa->npm) {
-            $mahasiswa->user->update(['username' => $mahasiswa->npm]);
         }
     }
 
-    private function createPendaftaran($mahasiswaId)
+    private function createPendaftaranForNpm($npm)
     {
-        // Debug: log sebelum insert
-        \Log::info('=== CREATE PENDAFTARAN DIPANGGIL ===');
-        \Log::info('mahasiswa_id: ' . $mahasiswaId);
-        \Log::info('academicPeriodId: ' . $this->academicPeriodId);
-        \Log::info('jenisPerwalian: ' . $this->jenisPerwalian);
-
-        if (!$this->academicPeriodId) {
-            $this->errors[] = "Baris {$this->rowNumber}: Periode akademik tidak valid (ID: {$this->academicPeriodId})";
-            return;
-        }
+        $mahasiswa = Mahasiswa::where('npm', $npm)->first();
+        if (!$mahasiswa) return;
 
         if ($this->jenisPerwalian == 'skripsi') {
-            $data = [
-                'mahasiswa_id' => $mahasiswaId,
-                'academic_period_id' => $this->academicPeriodId,
-                'judul_skripsi' => 'Belum diisi',
-                'dosen_pembimbing' => 'Belum ditentukan',
-                'status' => 'belum_daftar',
-            ];
+            // CEK LAGI SUDAH ADA? (double check)
+            $exists = PendaftaranSkripsi::where('mahasiswa_id', $mahasiswa->id)
+                ->where('academic_period_id', $this->academicPeriodId)
+                ->exists();
 
-            \Log::info('Insert skripsi data:', $data);
-            PendaftaranSkripsi::create($data);
-        } elseif ($this->jenisPerwalian == 'metodologi') {
-            $data = [
-                'mahasiswa_id' => $mahasiswaId,
-                'academic_period_id' => $this->academicPeriodId,
-                'email' => User::find($mahasiswaId)->email ?? '',
-                'judul_penelitian' => 'Belum diisi',
-                'dosen_pembimbing' => 'Belum ditentukan',
-                'kuliah_peminatan' => 'Belum dipilih',
-                'status' => 'belum_daftar',
-            ];
+            if (!$exists) {
+                PendaftaranSkripsi::create([
+                    'mahasiswa_id' => $mahasiswa->id,
+                    'academic_period_id' => $this->academicPeriodId,
+                    'judul_skripsi' => 'Belum diisi',
+                    'dosen_pembimbing' => 'Belum ditentukan',
+                    'status' => 'belum_daftar',
+                ]);
+            }
+        } else {
+            $exists = PendaftaranMetodologi::where('mahasiswa_id', $mahasiswa->id)
+                ->where('academic_period_id', $this->academicPeriodId)
+                ->exists();
 
-            \Log::info('Insert metodologi data:', $data);
-            PendaftaranMetodologi::create($data);
+            if (!$exists) {
+                PendaftaranMetodologi::create([
+                    'mahasiswa_id' => $mahasiswa->id,
+                    'academic_period_id' => $this->academicPeriodId,
+                    'email' => $mahasiswa->user->email ?? '',
+                    'judul_penelitian' => 'Belum diisi',
+                    'dosen_pembimbing' => 'Belum ditentukan',
+                    'kuliah_peminatan' => 'Belum dipilih',
+                    'status' => 'belum_daftar',
+                ]);
+            }
         }
     }
 
@@ -224,10 +338,12 @@ class MahasiswaImport implements ToCollection, WithHeadingRow
         $email = $nameSlug . '@student.unisba.ac.id';
         $counter = 1;
         $originalEmail = $email;
+
         while (User::where('email', $email)->exists()) {
             $email = str_replace('@student.unisba.ac.id', $counter . '@student.unisba.ac.id', $originalEmail);
             $counter++;
         }
+
         return $email;
     }
 
@@ -255,7 +371,7 @@ class MahasiswaImport implements ToCollection, WithHeadingRow
             }
             return null;
         } catch (\Exception $e) {
-            Log::error('Error parsing date: ' . $tglLahir . ' - ' . $e->getMessage());
+            Log::error('Error parsing date: ' . $tglLahir);
             return null;
         }
     }
