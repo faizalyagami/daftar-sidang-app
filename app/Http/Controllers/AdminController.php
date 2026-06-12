@@ -44,16 +44,33 @@ class AdminController extends Controller
             $q->where('role', 'mahasiswa');
         })->count();
 
-        $totalSkripsi = PendaftaranSkripsi::count();
-        $totalMetodologi = PendaftaranMetodologi::count();
+        $totalSkripsi = PendaftaranSkripsi::whereIn('status', [
+            'pending',
+            'review',
+            'approved',
+            'rejected'
+        ])
+            ->distinct('mahasiswa_id')
+            ->count('mahasiswa_id');
+        $totalMetodologi = PendaftaranMetodologi::whereIn('status', [
+            'pending',
+            'review',
+            'approved',
+            'rejected'
+        ])
+            ->distinct('mahasiswa_id')
+            ->count('mahasiswa_id');
+
         $pendingSkripsi = PendaftaranSkripsi::where('status', 'pending')->count();
 
         $skripsiTerbaru = PendaftaranSkripsi::with('mahasiswa.user')
+            ->where('status', '!=', 'belum_daftar')
             ->latest()
             ->take(10)
             ->get();
 
         $metodologiTerbaru = PendaftaranMetodologi::with('mahasiswa.user')
+            ->where('status', "!=", "belum_daftar")
             ->latest()
             ->take(10)
             ->get();
@@ -135,24 +152,58 @@ class AdminController extends Controller
     {
         $periodId = $request->get('period_id');
 
+        $perPageSkripsi = $request->get('per_page_skripsi', 10);
+        $perPageMetodologi = $request->get('per_page_metodologi', 10);
+
+        // Ambil data dengan unique per mahasiswa_id + academic_period_id
         $skripsi = PendaftaranSkripsi::with('mahasiswa.user', 'academicPeriod')
             ->when($periodId, function ($query, $periodId) {
                 return $query->where('academic_period_id', $periodId);
             })
             ->latest()
-            ->get();
+            ->get()
+            ->unique(function ($item) {
+                return $item->mahasiswa_id . '_' . $item->academic_period_id;
+            })
+            ->values(); // Reset index setelah unique
 
         $metodologi = PendaftaranMetodologi::with('mahasiswa.user', 'academicPeriod')
             ->when($periodId, function ($query, $periodId) {
                 return $query->where('academic_period_id', $periodId);
             })
             ->latest()
-            ->get();
+            ->get()
+            ->unique(function ($item) {
+                return $item->mahasiswa_id . '_' . $item->academic_period_id;
+            })
+            ->values();
 
-        // Ambil semua periode akademik untuk filter
+        // Pagination manual untuk collection
+        $currentPageSkripsi = $request->get('page_skripsi', 1);
+        $skripsi = new \Illuminate\Pagination\LengthAwarePaginator(
+            $skripsi->forPage($currentPageSkripsi, $perPageSkripsi),
+            $skripsi->count(),
+            $perPageSkripsi,
+            $currentPageSkripsi,
+            ['path' => $request->url(), 'query' => $request->query(), 'pageName' => 'page_skripsi']
+        );
+
+        $currentPageMetodologi = $request->get('page_metodologi', 1);
+        $metodologi = new \Illuminate\Pagination\LengthAwarePaginator(
+            $metodologi->forPage($currentPageMetodologi, $perPageMetodologi),
+            $metodologi->count(),
+            $perPageMetodologi,
+            $currentPageMetodologi,
+            ['path' => $request->url(), 'query' => $request->query(), 'pageName' => 'page_metodologi']
+        );
+
         $periods = AcademicPeriod::orderBy('tahun_akademik', 'desc')->get();
 
-        return view('admin.pendaftaran.index', compact('skripsi', 'metodologi', 'periods'));
+        $reviewers = User::whereHas('role', function ($q) {
+            $q->where('role', 'reviewer');
+        })->get();
+
+        return view('admin.pendaftaran.index', compact('skripsi', 'metodologi', 'periods', 'reviewers'));
     }
 
     public function showSkripsi($id)
@@ -175,54 +226,26 @@ class AdminController extends Controller
 
     public function importMahasiswaProcess(Request $request)
     {
-
-        set_time_limit(300);
-        ini_set('memory_limit', '256M');
+        set_time_limit(0);
+        ini_set('memory_limit', '1024M');
 
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:10240',
+            'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:20480', // Maks 20MB
             'academic_period_id' => 'required|exists:academic_periods,id',
             'jenis_perwalian' => 'required|in:skripsi,metodologi',
         ]);
 
-        \Log::info('Import request', [
-            'academic_period_id' => $request->academic_period_id,
-            'jenis_perwalian' => $request->jenis_perwalian
-        ]);
-
-
         $academicPeriod = AcademicPeriod::findOrFail($request->academic_period_id);
         $jenis = $request->jenis_perwalian;
 
-        // $import = new MahasiswaImport($jenis, $academicPeriod->id);
-        // dd([
-        //     'jenis' => $jenis,
-        //     'academic_id' => $academicPeriod->id,
-        //     'object_jenis' => $import->getJenisPerwalian(),
-        //     'object_period_id' => $import->getAcademicPeriodId()
-        // ]);
-
-        \Log::info('Academic Period:', [
-            'id' => $academicPeriod->id,
-            'semester' => $academicPeriod->semester,
-            'tahun' => $academicPeriod->tahun_akademik
-        ]);
-
         try {
-            // Perbaiki urutan parameter: (jenis_perwalian, academic_period_id)
             $import = new MahasiswaImport($jenis, $academicPeriod->id);
             Excel::import($import, $request->file('file'));
 
             $importedCount = $import->getImportedCount();
             $updatedCount = $import->getUpdatedCount();
-            $registeredCount = $import->getRegisteredCount(); // jumlah pendaftaran yang dibuat
+            $registeredCount = $import->getRegisteredCount();
             $errors = $import->getErrors();
-
-            if ($importedCount == 0 && $updatedCount == 0 && count($errors) > 0) {
-                return redirect()->back()
-                    ->with('error', 'Gagal import data. Detail error:<br>' . implode('<br>', array_slice($errors, 0, 20)))
-                    ->withInput();
-            }
 
             $message = "Import selesai!";
             if ($importedCount > 0) {
@@ -236,10 +259,7 @@ class AdminController extends Controller
             }
 
             if (count($errors) > 0) {
-                $message .= '<br><br><strong>Peringatan:</strong><br>' . implode('<br>', array_slice($errors, 0, 10));
-                if (count($errors) > 10) {
-                    $message .= '<br>... dan ' . (count($errors) - 10) . ' error lainnya.';
-                }
+                $message .= '<br><br><strong>Peringatan:</strong><br>' . implode('<br>', array_slice($errors, 0, 20));
                 return redirect()->route('admin.mahasiswa.index')->with('warning', $message);
             }
 
@@ -387,6 +407,46 @@ class AdminController extends Controller
         }
 
         return redirect()->back()->with('error', $result['message']);
+    }
+
+    public function bulkAssign(Request $request)
+    {
+        $request->validate([
+            'skripsi_ids' => 'array',
+            'metodologi_ids' => 'array',
+            'reviewer_id' => 'required|exists:users,id',
+            'notes' => 'nullable|string'
+        ]);
+
+        $reviewerId = $request->reviewer_id;
+        $count = 0;
+
+        // Assign skripsi
+        if (!empty($request->skripsi_ids)) {
+            $count += PendaftaranSkripsi::whereIn('id', $request->skripsi_ids)
+                ->where('status', 'pending')
+                ->update([
+                    'reviewer_id' => $reviewerId,
+                    'status' => 'review',
+                    'reviewer_notes' => $request->notes
+                ]);
+        }
+
+        // Assign metodologi
+        if (!empty($request->metodologi_ids)) {
+            $count += PendaftaranMetodologi::whereIn('id', $request->metodologi_ids)
+                ->where('status', 'pending')
+                ->update([
+                    'reviewer_id' => $reviewerId,
+                    'status' => 'review',
+                    'reviewer_notes' => $request->notes
+                ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$count} pendaftaran berhasil diassign ke reviewer."
+        ]);
     }
 
     public function reviewerStats()
