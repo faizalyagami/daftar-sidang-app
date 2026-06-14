@@ -122,6 +122,7 @@ Route::middleware(['auth'])->prefix('dosen')->name('dosen.')->group(function () 
     Route::get('/penilaian', [PenilaianController::class, 'index'])->name('penilaian.index');
     Route::get('/penilaian/{id}/create', [PenilaianController::class, 'create'])->name('penilaian.create');
     Route::post('/penilaian/{id}/store', [PenilaianController::class, 'store'])->name('penilaian.store');
+    Route::get('/penilaian/{id}/show', [PenilaianController::class, 'show'])->name('penilaian.show');
     Route::get('/penilaian/{id}/feedback', [PenilaianController::class, 'feedback'])->name('penilaian.feedback');
     Route::post('/penilaian/{id}/feedback', [PenilaianController::class, 'storeFeedback'])->name('penilaian.feedback.store');
     Route::get('/jadwal', [PenilaianController::class, 'jadwal'])->name('penilaian.jadwal');

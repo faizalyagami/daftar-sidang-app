@@ -14,9 +14,16 @@ class JadwalSkripsi extends Model
         'waktu_mulai',
         'waktu_selesai',
         'ruang',
+
         'dosen_penguji_1',
+        'dosen_penguji_1_id',
+
         'dosen_penguji_2',
+        'dosen_penguji_2_id',
+
         'dosen_penguji_3',
+        'dosen_penguji_3_id',
+
         'keterangan',
         'status'
     ];
@@ -99,5 +106,20 @@ class JadwalSkripsi extends Model
     public function rekapitulasi()
     {
         return $this->hasOne(RekapitulasiNilaiSkripsi::class, 'jadwal_skripsi_id');
+    }
+
+    public function penguji1()
+    {
+        return $this->belongsTo(Dosen::class, 'dosen_penguji_1_id');
+    }
+
+    public function penguji2()
+    {
+        return $this->belongsTo(Dosen::class, 'dosen_penguji_2_id');
+    }
+
+    public function penguji3()
+    {
+        return $this->belongsTo(Dosen::class, 'dosen_penguji_3_id');
     }
 }

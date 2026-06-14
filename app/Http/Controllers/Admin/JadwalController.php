@@ -42,17 +42,28 @@ class JadwalController extends Controller
             'waktu_mulai' => 'required',
             'waktu_selesai' => 'required|after:waktu_mulai',
             'ruang' => 'nullable|string',
-            'dosen_penguji_1' => 'nullable|string',
-            'dosen_penguji_2' => 'nullable|string',
-            'dosen_penguji_3' => 'nullable|string',
+            'dosen_penguji_1_id' => 'nullable|exists:dosens,id',
+            'dosen_penguji_2_id' => 'nullable|exists:dosens,id',
+            'dosen_penguji_3_id' => 'nullable|exists:dosens,id',
             'keterangan' => 'nullable|string',
         ]);
 
         $pendaftaran = PendaftaranSkripsi::findOrFail($id);
 
-        // Cek apakah sudah ada jadwal
         if ($pendaftaran->jadwal) {
             return redirect()->back()->with('error', 'Jadwal sudah ada untuk pendaftaran ini.');
+        }
+
+        // Ambil nama dosen untuk kolom teks (opsional, untuk kompatibilitas)
+        $dosen1 = Dosen::find($request->dosen_penguji_1_id);
+        $dosen2 = Dosen::find($request->dosen_penguji_2_id);
+        $dosen3 = Dosen::find($request->dosen_penguji_3_id);
+
+        // Jika penguji 1 tidak dipilih, gunakan dosen pembimbing dari pendaftaran
+        $penguji1Id = $request->dosen_penguji_1_id;
+        if (!$penguji1Id && $pendaftaran->dosen_pembimbing_id) {
+            $penguji1Id = $pendaftaran->dosen_pembimbing_id;
+            $dosen1 = Dosen::find($penguji1Id);
         }
 
         JadwalSkripsi::create([
@@ -61,14 +72,24 @@ class JadwalController extends Controller
             'waktu_mulai' => $request->waktu_mulai,
             'waktu_selesai' => $request->waktu_selesai,
             'ruang' => $request->ruang,
-            'dosen_penguji_1' => $request->dosen_penguji_1,
-            'dosen_penguji_2' => $request->dosen_penguji_2,
-            'dosen_penguji_3' => $request->dosen_penguji_3,
+
+            // Simpan ID (primary)
+            'dosen_penguji_1_id' => $penguji1Id,
+            'dosen_penguji_2_id' => $request->dosen_penguji_2_id,
+            'dosen_penguji_3_id' => $request->dosen_penguji_3_id,
+
+            // Simpan nama (opsional, untuk tampilan jika diperlukan)
+            'dosen_penguji_1' => $dosen1 ? $dosen1->name : null,
+            'dosen_penguji_2' => $dosen2 ? $dosen2->name : null,
+            'dosen_penguji_3' => $dosen3 ? $dosen3->name : null,
+
             'keterangan' => $request->keterangan,
-            'status' => 'terjadwal'
+            'status' => 'terjadwal',
         ]);
 
-        return redirect()->route('admin.jadwal.index')->with('success', 'Jadwal sidang skripsi berhasil ditambahkan.');
+        return redirect()
+            ->route('admin.jadwal.index')
+            ->with('success', 'Jadwal sidang skripsi berhasil ditambahkan.');
     }
 
     // Form tambah jadwal metodologi (sama)

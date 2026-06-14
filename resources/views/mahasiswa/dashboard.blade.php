@@ -134,6 +134,26 @@
             background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
             border: none;
         }
+
+        <style>.accordion-button:not(.collapsed) {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .accordion-button:not(.collapsed)::after {
+            filter: brightness(0) invert(1);
+        }
+
+        .accordion-button:hover {
+            background: #f0f4ff;
+        }
+
+        .accordion-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px !important;
+            overflow: hidden;
+        }
+    </style>
     </style>
 
     <div class="container-fluid px-4">
@@ -266,137 +286,203 @@
             @endif
         </div>
 
-        <!-- Hasil Feedback dan Nilai Akhir -->
+        <!-- Hasil Feedback dari Setiap Dosen Penguji -->
         <div class="row mb-4">
-            @if ($feedbackSkripsi || $nilaiAkhirSkripsi)
-                <div class="col-md-6">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header-custom">
-                            <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Hasil Sidang Skripsi</h5>
-                        </div>
-                        <div class="card-body">
-                            @if ($nilaiAkhirSkripsi)
-                                <div class="alert alert-success mb-3">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <strong>Nilai Akhir:</strong>
-                                            <h3 class="mb-0">{{ number_format($nilaiAkhirSkripsi->nilai_akhir, 2) }}</h3>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <strong>Huruf Mutu:</strong>
-                                            <h3 class="mb-0">{{ $nilaiAkhirSkripsi->huruf_mutu }}</h3>
-                                        </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Hasil Feedback Sidang Skripsi</h5>
+                    </div>
+                    <div class="card-body">
+                        @if ($nilaiAkhirSkripsi)
+                            <div class="alert alert-success mb-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Nilai Akhir:</strong>
+                                        <h3 class="mb-0">{{ number_format($nilaiAkhirSkripsi->nilai_akhir, 2) }}</h3>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Huruf Mutu:</strong>
+                                        <h3 class="mb-0">{{ $nilaiAkhirSkripsi->huruf_mutu }}</h3>
                                     </div>
                                 </div>
-                            @endif
+                            </div>
+                        @endif
 
-                            @if ($feedbackSkripsi)
-                                <div class="feedback-section">
-                                    <h6>Rekomendasi:
-                                        @switch($feedbackSkripsi->rekomendasi)
-                                            @case('layak')
-                                                <span class="badge bg-success">Layak Sidang</span>
-                                            @break
+                        @if ($feedbackPerDosenSkripsi && $feedbackPerDosenSkripsi->count() > 0)
+                            <div class="accordion" id="accordionFeedback">
+                                @foreach ($feedbackPerDosenSkripsi as $index => $feedback)
+                                    <div class="accordion-item mb-2 border rounded">
+                                        <h2 class="accordion-header" id="heading{{ $index }}">
+                                            <button class="accordion-button {{ $index != 0 ? 'collapsed' : '' }}"
+                                                type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#collapse{{ $index }}"
+                                                aria-expanded="{{ $index == 0 ? 'true' : 'false' }}"
+                                                aria-controls="collapse{{ $index }}">
+                                                <div class="d-flex justify-content-between w-100 me-3">
+                                                    <span>
+                                                        <i class="bi bi-person-circle me-2"></i>
+                                                        <strong>{{ $feedback->nama_dosen }}</strong>
+                                                    </span>
+                                                    <span
+                                                        class="badge bg-{{ $feedback->rekomendasi == 'layak'
+                                                            ? 'success'
+                                                            : ($feedback->rekomendasi == 'perbaikan_minor'
+                                                                ? 'warning'
+                                                                : ($feedback->rekomendasi == 'perbaikan_mayor'
+                                                                    ? 'danger'
+                                                                    : 'dark')) }}">
+                                                        {{ $feedback->rekomendasi == 'layak'
+                                                            ? 'Layak Sidang'
+                                                            : ($feedback->rekomendasi == 'perbaikan_minor'
+                                                                ? 'Perbaikan Minor'
+                                                                : ($feedback->rekomendasi == 'perbaikan_mayor'
+                                                                    ? 'Perbaikan Mayor'
+                                                                    : 'Tidak Layak')) }}
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapse{{ $index }}"
+                                            class="accordion-collapse collapse {{ $index == 0 ? 'show' : '' }}"
+                                            data-bs-parent="#accordionFeedback">
+                                            <div class="accordion-body">
+                                                @if ($feedback->catatan_perbaikan)
+                                                    <div class="mb-3">
+                                                        <strong><i class="bi bi-chat-text me-1"></i> Catatan Perbaikan
+                                                            Umum:</strong>
+                                                        <p class="mt-1 mb-0">{{ $feedback->catatan_perbaikan }}</p>
+                                                    </div>
+                                                @endif
 
-                                            @case('perbaikan_minor')
-                                                <span class="badge bg-warning">Perbaikan Minor</span>
-                                            @break
-
-                                            @case('perbaikan_mayor')
-                                                <span class="badge bg-danger">Perbaikan Mayor</span>
-                                            @break
-
-                                            @case('tidak_layak')
-                                                <span class="badge bg-dark">Tidak Layak Sidang</span>
-                                            @break
-
-                                            @default
-                                                <span class="badge bg-secondary">{{ $feedbackSkripsi->rekomendasi }}</span>
-                                        @endswitch
-                                    </h6>
-
-                                    @if ($feedbackSkripsi->catatan_perbaikan)
-                                        <div class="mt-3">
-                                            <strong>Catatan Perbaikan:</strong>
-                                            <p class="mt-1">{{ $feedbackSkripsi->catatan_perbaikan }}</p>
-                                        </div>
-                                    @endif
-
-                                    @if ($feedbackSkripsi->file_catatan)
-                                        <div class="mt-2">
-                                            <a href="{{ Storage::url($feedbackSkripsi->file_catatan) }}" target="_blank"
-                                                class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-download"></i> Download File Catatan
-                                            </a>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            @if ($feedbackMetodologi || $nilaiAkhirMetodologi)
-                <div class="col-md-6">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header-custom">
-                            <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Hasil Ujian Metodologi</h5>
-                        </div>
-                        <div class="card-body">
-                            @if ($nilaiAkhirMetodologi)
-                                <div class="alert alert-success mb-3">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <strong>Nilai Akhir:</strong>
-                                            <h3 class="mb-0">{{ number_format($nilaiAkhirMetodologi->nilai_akhir, 2) }}
-                                            </h3>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <strong>Huruf Mutu:</strong>
-                                            <h3 class="mb-0">{{ $nilaiAkhirMetodologi->huruf_mutu }}</h3>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="small text-muted mb-2">
+                                                            <i class="bi bi-calendar me-1"></i>
+                                                            {{ \Carbon\Carbon::parse($feedback->created_at)->format('d/m/Y H:i') }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 text-md-end">
+                                                        @if ($feedback->file_catatan)
+                                                            <a href="{{ Storage::url($feedback->file_catatan) }}"
+                                                                target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                <i class="bi bi-download"></i> Download File
+                                                            </a>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            @endif
-
-                            @if ($feedbackMetodologi)
-                                <div class="feedback-section">
-                                    <h6>Rekomendasi:
-                                        @switch($feedbackMetodologi->rekomendasi)
-                                            @case('layak')
-                                                <span class="badge bg-success">Layak</span>
-                                            @break
-
-                                            @case('perbaikan_minor')
-                                                <span class="badge bg-warning">Perbaikan Minor</span>
-                                            @break
-
-                                            @case('perbaikan_mayor')
-                                                <span class="badge bg-danger">Perbaikan Mayor</span>
-                                            @break
-
-                                            @case('tidak_layak')
-                                                <span class="badge bg-dark">Tidak Layak</span>
-                                            @break
-
-                                            @default
-                                                <span class="badge bg-secondary">{{ $feedbackMetodologi->rekomendasi }}</span>
-                                        @endswitch
-                                    </h6>
-
-                                    @if ($feedbackMetodologi->catatan_perbaikan)
-                                        <div class="mt-3">
-                                            <strong>Catatan Perbaikan:</strong>
-                                            <p class="mt-1">{{ $feedbackMetodologi->catatan_perbaikan }}</p>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p class="mb-0">Belum ada feedback dari dosen penguji</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
-            @endif
+            </div>
+
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Hasil Feedback Ujian Metodologi</h5>
+                    </div>
+                    <div class="card-body">
+                        @if ($nilaiAkhirMetodologi)
+                            <div class="alert alert-success mb-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Nilai Akhir:</strong>
+                                        <h3 class="mb-0">{{ number_format($nilaiAkhirMetodologi->nilai_akhir, 2) }}</h3>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Huruf Mutu:</strong>
+                                        <h3 class="mb-0">{{ $nilaiAkhirMetodologi->huruf_mutu }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if ($feedbackPerDosenMetodologi && $feedbackPerDosenMetodologi->count() > 0)
+                            <div class="accordion" id="accordionFeedbackMetodologi">
+                                @foreach ($feedbackPerDosenMetodologi as $index => $feedback)
+                                    <div class="accordion-item mb-2 border rounded">
+                                        <h2 class="accordion-header" id="headingMet{{ $index }}">
+                                            <button class="accordion-button {{ $index != 0 ? 'collapsed' : '' }}"
+                                                type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#collapseMet{{ $index }}"
+                                                aria-expanded="{{ $index == 0 ? 'true' : 'false' }}"
+                                                aria-controls="collapseMet{{ $index }}">
+                                                <div class="d-flex justify-content-between w-100 me-3">
+                                                    <span>
+                                                        <i class="bi bi-person-circle me-2"></i>
+                                                        <strong>{{ $feedback->nama_dosen }}</strong>
+                                                    </span>
+                                                    <span
+                                                        class="badge bg-{{ $feedback->rekomendasi == 'layak'
+                                                            ? 'success'
+                                                            : ($feedback->rekomendasi == 'perbaikan_minor'
+                                                                ? 'warning'
+                                                                : ($feedback->rekomendasi == 'perbaikan_mayor'
+                                                                    ? 'danger'
+                                                                    : 'dark')) }}">
+                                                        {{ $feedback->rekomendasi == 'layak'
+                                                            ? 'Layak'
+                                                            : ($feedback->rekomendasi == 'perbaikan_minor'
+                                                                ? 'Perbaikan Minor'
+                                                                : ($feedback->rekomendasi == 'perbaikan_mayor'
+                                                                    ? 'Perbaikan Mayor'
+                                                                    : 'Tidak Layak')) }}
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapseMet{{ $index }}"
+                                            class="accordion-collapse collapse {{ $index == 0 ? 'show' : '' }}"
+                                            data-bs-parent="#accordionFeedbackMetodologi">
+                                            <div class="accordion-body">
+                                                @if ($feedback->catatan_perbaikan)
+                                                    <div class="mb-3">
+                                                        <strong><i class="bi bi-chat-text me-1"></i> Catatan Perbaikan
+                                                            Umum:</strong>
+                                                        <p class="mt-1 mb-0">{{ $feedback->catatan_perbaikan }}</p>
+                                                    </div>
+                                                @endif
+
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="small text-muted mb-2">
+                                                            <i class="bi bi-calendar me-1"></i>
+                                                            {{ \Carbon\Carbon::parse($feedback->created_at)->format('d/m/Y H:i') }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 text-md-end">
+                                                        @if ($feedback->file_catatan)
+                                                            <a href="{{ Storage::url($feedback->file_catatan) }}"
+                                                                target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                <i class="bi bi-download"></i> Download File
+                                                            </a>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p class="mb-0">Belum ada feedback dari dosen penguji</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Riwayat Pendaftaran -->

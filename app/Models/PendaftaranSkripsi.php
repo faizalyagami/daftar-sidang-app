@@ -16,6 +16,7 @@ class PendaftaranSkripsi extends Model
         'academic_period_id',
         'judul_skripsi',
         'dosen_pembimbing',
+        'dosen_pembimbing_id',
         'narasumber',
         'tanggal_seminar',
         'status',
@@ -131,5 +132,10 @@ class PendaftaranSkripsi extends Model
             'berkas_skripsi' => 'Berkas Skripsi'
         ];
         return $list[$jenis] ?? $jenis;
+    }
+
+    public function dosenPembimbing()
+    {
+        return $this->belongsTo(Dosen::class, 'dosen_pembimbing_id');
     }
 }

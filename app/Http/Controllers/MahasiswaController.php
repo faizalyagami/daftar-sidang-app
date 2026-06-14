@@ -50,7 +50,7 @@ class MahasiswaController extends Controller
         $skripsiPeriods = $mahasiswa->getSkripsiPeriods();
         $metodologiPeriods = $mahasiswa->getMetodologiPeriods();
 
-        // --- Ambil jadwal untuk pendaftaran yang sudah approved ---
+        // Jadwal
         $jadwalSkripsi = null;
         $skripsiApproved = $pendaftaranSkripsi->where('status', 'approved')->first();
         if ($skripsiApproved && $skripsiApproved->jadwal) {
@@ -63,11 +63,21 @@ class MahasiswaController extends Controller
             $jadwalMetodologi = $metodologiApproved->jadwal;
         }
 
-        //feedback dan nilai akhir
-        $feedbackSkripsi = $mahasiswa->getFeedbackSkripsi();
-        $feedbackMetodologi = $mahasiswa->getFeedbackMetodologi();
+        // Nilai Akhir
         $nilaiAkhirSkripsi = $mahasiswa->getNilaiAkhirSkripsi();
         $nilaiAkhirMetodologi = $mahasiswa->getNilaiAkhirMetodologi();
+
+        // FEEDBACK DARI SETIAP DOSEN PENGUJI (sebagai collection)
+        $feedbackPerDosenSkripsi = collect(); // default empty collection
+        $feedbackPerDosenMetodologi = collect(); // default empty collection
+
+        if ($jadwalSkripsi) {
+            $feedbackPerDosenSkripsi = $jadwalSkripsi->feedback()->get();
+        }
+
+        if ($jadwalMetodologi) {
+            $feedbackPerDosenMetodologi = $jadwalMetodologi->feedback()->get();
+        }
 
         // REVISI / UPLOAD ULANG
         $revisiSkripsi = [];
@@ -83,7 +93,6 @@ class MahasiswaController extends Controller
             $revisiMetodologi = $pendaftaranMetodologiAktif->getCatatanRevisi();
         }
 
-
         return view('mahasiswa.dashboard', compact(
             'pendaftaranSkripsi',
             'pendaftaranMetodologi',
@@ -93,10 +102,10 @@ class MahasiswaController extends Controller
             'metodologiPeriods',
             'jadwalSkripsi',
             'jadwalMetodologi',
-            'feedbackSkripsi',
-            'feedbackMetodologi',
             'nilaiAkhirSkripsi',
             'nilaiAkhirMetodologi',
+            'feedbackPerDosenSkripsi',
+            'feedbackPerDosenMetodologi',
             'revisiSkripsi',
             'revisiMetodologi'
         ));
@@ -151,10 +160,12 @@ class MahasiswaController extends Controller
             }
 
             $mahasiswa = Auth::user()->mahasiswa;
-
             if (!$mahasiswa) {
-                return redirect()->back()->with('error', 'Data mahasiswa tidak ditemukan. Silakan hubungi admin.');
+                return redirect()->back()->with('error', 'Data mahasiswa tidak ditemukan.');
             }
+
+            // Cari ID dosen pembimbing berdasarkan nama
+            $dosenPembimbing = Dosen::where('name', $request->dosen_pembimbing)->first();
 
             $pendaftaran = PendaftaranSkripsi::where('mahasiswa_id', $mahasiswa->id)
                 ->where('academic_period_id', $activePeriod->id)
@@ -165,22 +176,25 @@ class MahasiswaController extends Controller
                 $pendaftaran->update([
                     'judul_skripsi' => $request->judul_skripsi,
                     'dosen_pembimbing' => $request->dosen_pembimbing,
+                    'dosen_pembimbing_id' => $dosenPembimbing ? $dosenPembimbing->id : null,
                     'narasumber' => $request->narasumber,
                     'tanggal_seminar' => $request->tanggal_seminar,
                     'status' => 'pending',
                 ]);
             } else {
-                // Buat pendaftaran baru jika belum ada
+                // Buat pendaftaran baru
                 $pendaftaran = PendaftaranSkripsi::create([
                     'mahasiswa_id' => $mahasiswa->id,
                     'academic_period_id' => $activePeriod->id,
                     'judul_skripsi' => $request->judul_skripsi,
                     'dosen_pembimbing' => $request->dosen_pembimbing,
+                    'dosen_pembimbing_id' => $dosenPembimbing ? $dosenPembimbing->id : null,
                     'narasumber' => $request->narasumber,
                     'tanggal_seminar' => $request->tanggal_seminar,
                     'status' => 'pending',
                 ]);
             }
+
             // Upload dokumen
             $dokumenTypes = [
                 'bukti_pembayaran_registrasi',

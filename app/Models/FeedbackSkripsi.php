@@ -44,6 +44,11 @@ class FeedbackSkripsi extends Model
         'is_completed' => 'boolean'
     ];
 
+    protected $attributes = [
+        'rekomendasi' => 'layak', // default value
+        'is_completed' => false
+    ];
+
     public function jadwal()
     {
         return $this->belongsTo(JadwalSkripsi::class, 'jadwal_skripsi_id');

@@ -29,35 +29,43 @@ class PenilaianController extends Controller
 
     public function index()
     {
-        $namaDosen = Auth::user()->name;
+        $dosen = Auth::user()->dosen;
 
-        // Cek apakah user memiliki relasi dosen, jika ada ambil dari sana
-        if (Auth::user()->dosen) {
-            $namaDosen = Auth::user()->dosen->name;
+        if (!$dosen) {
+            abort(403, 'Data dosen tidak ditemukan. Silakan hubungi admin.');
         }
 
-        $jadwal = JadwalSkripsi::with(['pendaftaran.mahasiswa.user', 'penilaian'])
-            ->where('dosen_penguji_1', $namaDosen)
-            ->orWhere('dosen_penguji_2', $namaDosen)
-            ->orWhere('dosen_penguji_3', $namaDosen)
+        $dosenId = $dosen->id;
+
+        $jadwal = JadwalSkripsi::with(['pendaftaran.mahasiswa.user', 'penilaian', 'feedback'])
+            ->where(function ($query) use ($dosenId) {
+                $query->where('dosen_penguji_1_id', $dosenId)
+                    ->orWhere('dosen_penguji_2_id', $dosenId)
+                    ->orWhere('dosen_penguji_3_id', $dosenId);
+            })
             ->get();
 
-        return view('dosen.penilaian.index', compact('jadwal', 'namaDosen'));
+        return view('dosen.penilaian.index', compact('jadwal'));
     }
 
     public function create($id)
     {
         $jadwal = JadwalSkripsi::with('pendaftaran.mahasiswa.user')->findOrFail($id);
 
-        $namaDosen = Auth::user()->name;
-        if (Auth::user()->dosen) {
-            $namaDosen = Auth::user()->dosen->name;
+        $dosen = Auth::user()->dosen;
+
+        if (!$dosen) {
+            abort(403, 'Data dosen tidak ditemukan. Silakan hubungi admin.');
         }
 
-        $isPenguji = in_array($namaDosen, [
-            $jadwal->dosen_penguji_1,
-            $jadwal->dosen_penguji_2,
-            $jadwal->dosen_penguji_3
+        $dosenId = $dosen->id;
+        $namaDosen = $dosen->name;
+
+        // Cek apakah dosen ini adalah penguji (berdasarkan ID)
+        $isPenguji = in_array($dosenId, [
+            $jadwal->dosen_penguji_1_id,
+            $jadwal->dosen_penguji_2_id,
+            $jadwal->dosen_penguji_3_id
         ]);
 
         if (!$isPenguji) {
@@ -65,14 +73,15 @@ class PenilaianController extends Controller
         }
 
         $penilaian = PenilaianSkripsi::where('jadwal_skripsi_id', $id)
-            ->where('nama_dosen_penguji', $namaDosen)
+            ->where('dosen_id', $dosenId)
             ->first();
 
         if (!$penilaian) {
             $penilaian = PenilaianSkripsi::create([
                 'jadwal_skripsi_id' => $id,
+                'dosen_id' => $dosenId,
                 'nama_dosen_penguji' => $namaDosen,
-                'bobot' => $this->getBobotPenguji($jadwal, $namaDosen)
+                'bobot' => $this->getBobotPenguji($jadwal, $dosenId)
             ]);
         }
 
@@ -118,29 +127,74 @@ class PenilaianController extends Controller
             ->with('success', 'Penilaian berhasil disimpan');
     }
 
-    public function jadwal()
+    public function show($id)
     {
-        $namaDosen = Auth::user()->name;
-        if (Auth::user()->dosen) {
-            $namaDosen = Auth::user()->dosen->name;
+        $dosen = Auth::user()->dosen;
+
+        if (!$dosen) {
+            abort(403, 'Data dosen tidak ditemukan. Silakan hubungi admin.');
         }
 
-        $jadwal = JadwalSkripsi::with(['pendaftaran.mahasiswa.user', 'penilaian'])
-            ->where('dosen_penguji_1', $namaDosen)
-            ->orWhere('dosen_penguji_2', $namaDosen)
-            ->orWhere('dosen_penguji_3', $namaDosen)
+        \Log::info('Show penilaian - Parameter ID: ' . $id);
+        \Log::info('Dosen login: ' . $dosen->name . ' (ID: ' . $dosen->id . ')');
+
+        // Cari penilaian berdasarkan jadwal_skripsi_id
+        $penilaian = PenilaianSkripsi::where('jadwal_skripsi_id', $id)
+            ->with(['jadwal.pendaftaran.mahasiswa.user', 'jadwal.penguji1', 'jadwal.penguji2', 'jadwal.penguji3'])
+            ->first();
+
+        \Log::info('Penilaian ditemukan: ' . ($penilaian ? 'Ya' : 'Tidak'));
+
+        if (!$penilaian) {
+            // Jika tidak ditemukan, coba berdasarkan ID penilaian langsung
+            $penilaian = PenilaianSkripsi::find($id);
+            \Log::info('Pencarian berdasarkan ID penilaian: ' . ($penilaian ? 'Ditemukan' : 'Tidak ditemukan'));
+        }
+
+        if (!$penilaian) {
+            return redirect()->route('dosen.penilaian.index')
+                ->with('error', 'Data penilaian tidak ditemukan. ID yang dicari: ' . $id);
+        }
+
+        // Update dosen_id jika masih kosong
+        if (!$penilaian->dosen_id) {
+            $penilaian->update(['dosen_id' => $dosen->id]);
+        }
+
+        $jadwal = $penilaian->jadwal;
+        $isReadOnly = true;
+
+        return view('dosen.penilaian.show', compact('penilaian', 'jadwal', 'isReadOnly'));
+    }
+
+    public function jadwal()
+    {
+        $dosen = Auth::user()->dosen;
+
+        if (!$dosen) {
+            abort(403, 'Data dosen tidak ditemukan. Silakan hubungi admin.');
+        }
+
+        $dosenId = $dosen->id;
+
+        $jadwal = JadwalSkripsi::with(['pendaftaran.mahasiswa.user', 'penilaian', 'feedback'])
+            ->where(function ($query) use ($dosenId) {
+                $query->where('dosen_penguji_1_id', $dosenId)
+                    ->orWhere('dosen_penguji_2_id', $dosenId)
+                    ->orWhere('dosen_penguji_3_id', $dosenId);
+            })
             ->orderBy('tanggal', 'desc')
             ->get();
 
         return view('dosen.penilaian.jadwal', compact('jadwal'));
     }
 
-    private function getBobotPenguji($jadwal, $namaDosen)
+    private function getBobotPenguji($jadwal, $dosenId)
     {
-        // Bobot berdasarkan urutan penguji
-        if ($jadwal->dosen_penguji_1 == $namaDosen) return 40;
-        if ($jadwal->dosen_penguji_2 == $namaDosen) return 30;
-        if ($jadwal->dosen_penguji_3 == $namaDosen) return 30;
+        // Bobot berdasarkan urutan penguji (menggunakan ID)
+        if ($jadwal->dosen_penguji_1_id == $dosenId) return 40;
+        if ($jadwal->dosen_penguji_2_id == $dosenId) return 30;
+        if ($jadwal->dosen_penguji_3_id == $dosenId) return 30;
         return 0;
     }
 
@@ -187,33 +241,43 @@ class PenilaianController extends Controller
     {
         $jadwal = JadwalSkripsi::with('pendaftaran.mahasiswa.user')->findOrFail($id);
 
-        $namaDosen = Auth::user()->name;
-        if (Auth::user()->dosen) {
-            $namaDosen = Auth::user()->dosen->name;
+        $dosen = Auth::user()->dosen;
+
+        if (!$dosen) {
+            abort(403, 'Data dosen tidak ditemukan. Silakan hubungi admin.');
         }
 
-        // Cek apakah dosen ini adalah penguji
-        $isPenguji = in_array($namaDosen, [
-            $jadwal->dosen_penguji_1,
-            $jadwal->dosen_penguji_2,
-            $jadwal->dosen_penguji_3
+        $dosenId = $dosen->id;
+        $namaDosen = $dosen->name;
+
+        // Cek apakah dosen ini adalah penguji (berdasarkan ID)
+        $isPenguji = in_array($dosenId, [
+            $jadwal->dosen_penguji_1_id,
+            $jadwal->dosen_penguji_2_id,
+            $jadwal->dosen_penguji_3_id
         ]);
 
         if (!$isPenguji) {
             abort(403, 'Anda tidak terdaftar sebagai penguji untuk sidang ini.');
         }
 
+        // CARI FEEDBACK BERDASARKAN DOSEN_ID
         $feedback = FeedbackSkripsi::where('jadwal_skripsi_id', $id)
-            ->where('dosen_id', Auth::user()->dosen->id ?? null)
+            ->where('dosen_id', $dosenId)
             ->first();
 
         if (!$feedback) {
             $feedback = FeedbackSkripsi::create([
                 'jadwal_skripsi_id' => $id,
-                'dosen_id' => Auth::user()->dosen->id ?? null,
+                'dosen_id' => $dosenId,
                 'nama_dosen' => $namaDosen,
                 'is_completed' => false
             ]);
+        }
+
+        // Update dosen_id jika masih kosong
+        if (!$feedback->dosen_id) {
+            $feedback->update(['dosen_id' => $dosenId]);
         }
 
         $isReadOnly = $feedback->is_completed;
@@ -225,8 +289,18 @@ class PenilaianController extends Controller
     {
         $feedback = FeedbackSkripsi::findOrFail($id);
 
+        // Pastikan feedback milik dosen yang login
+        $dosen = Auth::user()->dosen;
+
+        if (!$dosen) {
+            abort(403, 'Data dosen tidak ditemukan.');
+        }
+
+        if ($feedback->dosen_id != $dosen->id) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit feedback ini.');
+        }
+
         $request->validate([
-            'rekomendasi' => 'required|in:layak,perbaikan_minor,perbaikan_mayor,tidak_layak',
             'catatan_perbaikan' => 'nullable|string',
             'catatan_bagian_depan' => 'nullable|string',
             'catatan_bab1' => 'nullable|string',
@@ -239,7 +313,6 @@ class PenilaianController extends Controller
         ]);
 
         $feedback->update([
-            'rekomendasi' => $request->rekomendasi,
             'catatan_perbaikan' => $request->catatan_perbaikan,
             'catatan_bagian_depan' => $request->catatan_bagian_depan,
             'catatan_bab1' => $request->catatan_bab1,
@@ -251,6 +324,7 @@ class PenilaianController extends Controller
             'catatan_presentasi' => $request->catatan_presentasi,
             'perbaikan_mayor' => $request->has('perbaikan_mayor'),
             'perbaikan_minor' => $request->has('perbaikan_minor'),
+            'rekomendasi' => $request->has('perbaikan_mayor') ? 'perbaikan_mayor' : ($request->has('perbaikan_minor') ? 'perbaikan_minor' : 'layak'),
             'is_completed' => true
         ]);
 
